@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     // Mermaidプレビュー 有効状態
     chrome.storage.local.get('mermaidEnabled', (data) => {
+        if (data.mermaidEnabled === undefined) {
+            document.getElementById('mermaid-enabled').checked = true;
+            return;
+        }
         document.getElementById('mermaid-enabled').checked = data.mermaidEnabled;
     });
     // Mermaidのテーマ設定
