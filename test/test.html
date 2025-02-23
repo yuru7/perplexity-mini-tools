@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    pre {
+      border: 1px solid black; /* Example border style */
+    }
+    div.m {
+      /* width: 50%; */
+      width: 1000px;
+    }
+  </style>
+</head>
+<body>
+  <div class="m"><pre><code>
+    ```mermaid
+    flowchart LR
+    subgraph サブグラフA[ユーザ操作]
+        A1[ログイン画面表示] --> A2{ログイン成功？}
+        A2 -->|はい| A3[ダッシュボード表示]
+        A2 -->|いいえ| A4[エラーメッセージ表示]
+        A4 --> A1
+    end
+
+    subgraph サブグラフB[バックエンド処理]
+        B1[認証API呼び出し] --> B2{認証結果}
+        B2 -->|成功| B3[セッション生成]
+        B2 -->|失敗| B4[エラー返却]
+    end
+
+    subgraph サブグラフC[並列処理]
+        C1[データ取得] & C2[通知確認] & C3[ログ記録]
+    end
+
+    %% ノード間の接続
+    A3 --> C1
+    A3 --> C2
+    A3 --> C3
+    C1 & C2 & C3 --> D[ユーザ画面更新]
+
+    %% サブグラフ間のリンク
+    A1 --> B1
+    B4 --> A4
+    ```
+  </code></pre></div>
+  <div class="m"><pre><code>
+    graph TD;
+      A-->B;
+      A-->C;
+      B-->D;
+      C-->D;
+      D-->E;
+      E-->F;
+      F-->G;
+      G-->H;
+  </code></pre></div>
+  <button id="add-pre">preタグを追加する</button>
+
+  <script>
+    document.getElementById('add-pre').addEventListener('click', () => {
+      const div = document.createElement('div');
+      const pre = document.createElement('pre');
+      const codeBlock = document.createElement('code');
+      codeBlock.textContent = `
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+
+    subgraph "hoge"
+        B
+        C
+    end
+      `;
+      pre.appendChild(codeBlock);
+      div.appendChild(pre);
+      document.body.appendChild(div);
+    });
+  </script>
+</body>
+</html>

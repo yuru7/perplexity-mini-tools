@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perplexity Mini Tools Options</title>
+  <style>
+    * {
+      font-size: 0.95rem;
+    }
+
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+    }
+
+    h1 {
+      text-align: left;
+      margin: 20px 0;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    p {
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    form {
+      padding: 20px 30px;
+      background-color: #fff;
+      margin: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    select {
+      padding: 2px 6px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      /* margin-top: 15px; */
+      padding: 6px 12px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    ul {
+      margin: 0 auto;
+    }
+
+    .wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: start;
+      height: 50vh;
+      margin: 0 auto;
+      max-width: 600px;
+    }
+
+    .options {
+      margin: 0;
+    }
+
+    .option-item {
+      margin-bottom: 20px;
+    }
+
+    .option-item-title {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .option-item-child {
+      font-weight: 1rem;
+      margin-left: 4px;
+      margin-bottom: 6px;
+    }
+
+    .option-item-description {
+      font-size: 0.85rem;
+      margin-top: 2px;
+      margin-left: 3px;
+      color: #444;
+    }
+
+    .app-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #confirmation-message {
+      display: none;
+      color: green;
+      font-weight: bold;
+      text-align: left;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #333;
+        color: #fff;
+      }
+
+      form {
+        background-color: #444;
+        color: #fff;
+      }
+
+      select {
+        background-color: #555;
+        color: #fff;
+      }
+
+      button {
+        background-color: #0d66c5;
+        color: #fff;
+      }
+
+      .option-item-description {
+        color: #c0c0c0;
+      }
+
+      #confirmation-message {
+        color: #0dc53b;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <form>
+      <header>
+        <div class="app-title">Perplexity Mini Tools</div>
+      </header>
+      <h1>Options</h1>
+      <div class="options">
+
+        <div class="option-item">
+          <div class="option-item-title">Keyboard shortcuts</div>
+          <div class="option-item-child">
+            <label for="markdown-editor-like">
+              <input type="checkbox" id="markdown-editor-like" name="markdown-editor-like">
+              Markdown editor like operations
+            </label>
+            <div class="option-item-description">
+              <ul>
+                <li>[Shift + Enter] Add Markdown list symbols and indentation along with line breaks</li>
+                <li>[Tab] Indent the current line (Selection operation support)</li>
+                <li>[Shift + Tab] Outdent the current line (Selection operation support)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="option-item-child">
+            <label for="shortcut-search-options">
+              <input type="checkbox" id="shortcut-search-options" name="shortcut-search-options">
+              Change Pro-search options
+            </label>
+            <div class="option-item-description">
+              <ul>
+                <li>[Ctrl + ArrowDown] Switch to the next model</li>
+                <li>[Ctrl + ArrowUp] Switch to the previous model</li>
+                <li>[Ctrl + Shift + .] Toggle Web search source</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="option-item">
+          <div class="option-item-title">Mermaid preview</div>
+          <div class="option-item-child">
+            <label for="mermaid-enabled">
+              <input type="checkbox" id="mermaid-enabled" name="mermaid-enabled">
+              Auto-detects Mermaid and displays a preview button
+            </label>
+            <div class="option-item-description">
+              When enabled, the Mermaid code block is automatically detected and a preview button is displayed.
+            </div>
+          </div>
+          <div class="option-item-child">
+            <label>
+              default color theme
+            </label>
+            <div>
+              <select id="mermaid-theme">
+                <option value="auto">auto</option>
+                <option value="default">default</option>
+                <option value="neutral">neutral</option>
+                <option value="dark">dark</option>
+                <option value="forest">forest</option>
+                <option value="base">base</option>
+              </select>
+            </div>
+            <div class="option-item-description">
+              When set to "auto", either "default" or "dark" is selected according to the OS theme.
+            </div>
+          </div>
+        </div>
+
+        <div class="submit">
+          <button type="submit">Save</button>
+          <p id="confirmation-message">Saved. You must reload the Perplexity page to apply.</p>
+        </div>
+      </div class="options">
+    </form>
+  </div>
+  <script src="options.js"></script>
+</body>
+
+</html>
