@@ -245,16 +245,16 @@
             }
 
             if (this.modifierKeys.length === 0) {
-                if (e.key === 'Enter' && ctrlOrMetaKey(e) && !e.shiftKey && !e.altKey) {
+                if (e.key === 'Enter' && this.ctrlOrMetaKey(e) && !e.shiftKey && !e.altKey) {
                     e.preventDefault();
                     e.target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
                     return;
                 }
-                if (e.key === 'Enter' && (ctrlOrMetaKey(e) || e.shiftKey || e.altKey)) {
+                if (e.key === 'Enter' && (this.ctrlOrMetaKey(e) || e.shiftKey || e.altKey)) {
                     return;
                 }
             }
-            if (this.modifierKeys.length > 0 && e.key === 'Enter' && !ctrlOrMetaKey(e) && !e.shiftKey && !e.altKey) {
+            if (this.modifierKeys.length > 0 && e.key === 'Enter' && !this.ctrlOrMetaKey(e) && !e.shiftKey && !e.altKey) {
                 return;
             }
 
@@ -265,7 +265,7 @@
                 if (!this.modifierKeys.every(modifierKey => {
                     switch (modifierKey) {
                         case MDTextarea.CTRL_KEY:
-                            if (!ctrlOrMetaKey(e)) {
+                            if (!this.ctrlOrMetaKey(e)) {
                                 return false;
                             }
                             break;
