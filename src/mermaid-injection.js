@@ -542,6 +542,9 @@
 
     function processPreElements(root) {
         // 子要素内のcode要素
+        if (!root.parentNode) {
+            return;
+        }
         root.parentNode.querySelectorAll(MUTATION_OBSERVER_QUERY_SELECTOR).forEach(node => {
             if (node.matches(SELECTOR)) {
                 processMermaidBlock(node);

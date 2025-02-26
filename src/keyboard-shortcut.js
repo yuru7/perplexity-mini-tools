@@ -1,4 +1,4 @@
-(async () => {
+(() => {
     const QUICK_SEARCH_MODAL_SELECTOR = 'div[data-testid="quick-search-modal"] button';
     const MAIN_SEARCH_BOX_MODEL_SELECT_SELECTOR = 'div.gap-sm.flex > span:nth-child(1) > button';
     const MODEL_SELECT_AREA_OUTER_SELECTOR = 'div[data-placement]';
@@ -36,7 +36,7 @@
             });
         });
     }
-    const config = await initConfig();
+    let config = null;
 
     function searchOptionHandler(event) {
         if (event.isComposing) {
@@ -610,34 +610,41 @@
         mdTextarea.enable();
     }
 
-    // ---------- Main ----------
+    async function main() {
+        config = await initConfig();
 
-    // ページ全体へのイベントリスナーを追加
-    if (config.searchOption) {
-        document.addEventListener('keydown', (event) => {
-            searchOptionHandler(event);
-        }, true);
-    }
+        // ページ全体へのイベントリスナーを追加
+        if (config.searchOption) {
+            document.addEventListener('keydown', (event) => {
+                searchOptionHandler(event);
+            }, true);
+        }
 
-    // textarea へのイベントリスナーを追加
-    if (config.markdownEditorLike) {
-        // Markdown編集機能を追加
-        // ページ読み込み時と、DOM変更時に対応する
-        const textareas = document.querySelectorAll("main textarea");
-        textareas.forEach(textarea => {
-            setTextareaEventListeners(textarea);
-        }, true);
+        // textarea へのイベントリスナーを追加
+        if (config.markdownEditorLike) {
+            // Markdown編集機能を追加
+            // ページ読み込み時と、DOM変更時に対応する
+            const textareas = document.querySelectorAll("main textarea:not([data-md-textarea])");
+            textareas.forEach(textarea => {
+                setTextareaEventListeners(textarea);
+            }, true);
+        }
 
-        // DOM変更時の対応する
+        // DOM変更時の対応をする
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === Node.ELEMENT_NODE) {
                         const parent = node.parentElement;
-                        const textareas = parent.querySelectorAll("textarea:not([data-md-textarea])");
-                        textareas.forEach(textarea => {
-                            setTextareaEventListeners(textarea);
-                        });
+                        if (!parent) {
+                            return;
+                        }
+                        if (config.markdownEditorLike) {
+                            const textareas = parent.querySelectorAll("textarea:not([data-md-textarea])");
+                            textareas.forEach(textarea => {
+                                setTextareaEventListeners(textarea);
+                            });
+                        }
                     }
                 });
             });
@@ -649,4 +656,7 @@
             characterData: false
         });
     }
+
+    main();
+
 })();
