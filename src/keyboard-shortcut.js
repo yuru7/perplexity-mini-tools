@@ -703,7 +703,26 @@
                                 // Markdown文字列にいくつかの整形
                                 markdown = markdown.replace(/(\s*- ) +/g, '$1');
                                 // clipboardにコピー
-                                navigator.clipboard.writeText(markdown);
+                                navigator.clipboard.writeText(markdown)
+                                    .then(() => {
+                                        console.log('Copied to clipboard');
+                                        // コピー成功時の処理
+                                        // ボタンの内容を一時的に保存
+                                        const originalDiv = button.children[0];
+                                        // ボタンをチェックマークに変更
+                                        const svg = document.createElement('img');
+                                        svg.src = chrome.runtime.getURL('assets/check.svg');
+                                        svg.width = 16;
+                                        svg.height = 16;
+                                        svg.classList.add('ks-check-svg');
+                                        const newDiv = document.createElement('div');
+                                        newDiv.appendChild(svg);
+                                        button.children[0].replaceWith(newDiv);
+                                        // 元に戻す
+                                        setTimeout(() => {
+                                            newDiv.replaceWith(originalDiv);
+                                        }, 2000);
+                                    });
                             }, true);
                         });
                     }

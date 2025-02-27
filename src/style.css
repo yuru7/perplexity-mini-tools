@@ -184,3 +184,10 @@
 .mermaid-dark #mermaid-popup-close {
     filter: invert(1);
 }
+
+/* dark mode */
+@media (prefers-color-scheme: dark) {
+    .ks-check-svg {
+        filter: invert(1);
+    }
+}
