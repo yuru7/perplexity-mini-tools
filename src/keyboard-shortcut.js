@@ -601,10 +601,21 @@
     }
 
     function setTextareaEventListeners(textarea) {
+        // Ctrl+V の際にカーソルが末尾にジャンプする不具合を予防
+        // 貼り付け形式がテキストの場合、標準のイベントリスナーには処理をさせない
+        textarea.addEventListener('paste', (event) => {
+            if (!event.clipboardData.types.includes('text/plain')) {
+                return;
+            }
+            event.stopImmediatePropagation();
+        }, true);
+
+        // Escape押下でスクロール可能なコンテナにフォーカスを移す
         textarea.addEventListener('keydown', (event) => {
             focusScrollableContainerHandler(event);
         });
 
+        // Markdownエディターライクな操作を追加
         const mdTextarea = new MDTextarea(textarea, [MDTextarea.SHIFT_KEY], false);
         mdTextarea.enable();
     }
