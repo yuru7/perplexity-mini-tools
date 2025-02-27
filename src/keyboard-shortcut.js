@@ -645,6 +645,67 @@
                                 setTextareaEventListeners(textarea);
                             });
                         }
+
+                        // プレーンテキストでコピーする
+                        const copyButtons = parent.querySelectorAll('button[aria-label="Copy"]');
+                        copyButtons.forEach(button => {
+                            if (button.dataset.plainCopyButton) {
+                                return;
+                            }
+                            button.dataset.plainCopyButton = true;
+
+                            const p = button.parentElement.parentElement.parentElement;
+                            button.addEventListener('click', (event) => {
+                                if (!event.shiftKey) {
+                                    return;
+                                }
+                                event.stopImmediatePropagation();
+                                const response = p.children[1].cloneNode(true);
+                                // 要素の削除、整形
+                                response.querySelectorAll('a').forEach(a => {
+                                    a.remove();
+                                });
+                                response.querySelectorAll('div.codeWrapper').forEach(codeWrapper => {
+                                    const pre = codeWrapper.closest('pre');
+                                    // code を pre で囲む
+                                    const newPre = document.createElement('pre');
+                                    const code = codeWrapper.querySelector('code');
+                                    const newCode = document.createElement('code');
+                                    newCode.textContent = code.textContent;
+                                    newPre.appendChild(newCode);
+                                    pre.replaceWith(newPre)
+                                    // 言語識別子の設定
+                                    let lang = "";
+                                    const langElement = codeWrapper.querySelector('.inline-block')
+                                    lang = langElement.textContent;
+                                    langElement.remove();
+                                    newPre.dataset.language = lang;
+                                });
+                                // turndownインスタンスの生成
+                                const turndownService = new TurndownService({
+                                    headingStyle: 'atx',
+                                    hr: '---',
+                                    bulletListMarker: '-',
+                                    codeBlockStyle: 'fenced',
+                                })
+                                // 言語識別子をコードブロックに追加
+                                turndownService.addRule('codeBlock', {
+                                    filter: ['pre'],
+                                    replacement: function (content, node) {
+                                        let lang = node.dataset.language;
+                                        if (lang) {
+                                            return '```' + lang + '\n' + content + '```';
+                                        }
+                                        return '```\n' + content + '```';
+                                    }
+                                });
+                                let markdown = turndownService.turndown(response);
+                                // Markdown文字列にいくつかの整形
+                                markdown = markdown.replace(/(\s*- ) +/g, '$1');
+                                // clipboardにコピー
+                                navigator.clipboard.writeText(markdown);
+                            }, true);
+                        });
                     }
                 });
             });
