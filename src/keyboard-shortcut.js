@@ -653,13 +653,23 @@
         turndownService.use(turndownPluginGfm.gfm);
         // 言語識別子をコードブロックに追加
         turndownService.addRule('codeBlock', {
-            filter: ['pre'],
+            filter: 'pre',
             replacement: function (content, node) {
                 let lang = node.dataset.language;
                 if (lang) {
                     return '```' + lang + '\n' + content + '```';
                 }
                 return '```\n' + content + '```';
+            }
+        });
+        // li > p は空行を入れない
+        turndownService.addRule('listItem', {
+            filter: (node) => {
+                return node.nodeName === 'P'
+                    && node.parentNode.nodeName === 'LI'; // li > p
+            },
+            replacement: function (content) {
+                return content;
             }
         });
         let markdown = turndownService.turndown(response);
