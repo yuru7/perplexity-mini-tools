@@ -515,7 +515,6 @@
             // 選択範囲がある場合は選択範囲をアウトデントする
             const isSelectionNotEmpty = this.textarea.selectionStart !== this.textarea.selectionEnd;
             if (isSelectionNotEmpty) {
-                console.log(this.textarea.selectionStart, this.textarea.selectionEnd);
                 const selectStart = this.getStartOfLine(this.textarea.selectionStart);
                 const selectEnd = this.getEndOfLine(this.textarea.selectionEnd);
                 const selectText = this.textarea.value.substring(selectStart, selectEnd);
@@ -610,6 +609,77 @@
         mdTextarea.enable();
     }
 
+    function simpleCopy(button) {
+        const buttonParent = button.parentElement.parentElement.parentElement;
+        const response = buttonParent.children[1].cloneNode(true);
+        // 要素の削除、整形
+        response.querySelectorAll('a').forEach(a => {
+            a.remove();
+        });
+        response.querySelectorAll('div.codeWrapper').forEach(codeWrapper => {
+            const pre = codeWrapper.closest('pre');
+            // code を pre で囲む
+            const newPre = document.createElement('pre');
+            const code = codeWrapper.querySelector('code');
+            const newCode = document.createElement('code');
+            newCode.textContent = code.textContent;
+            newPre.appendChild(newCode);
+            pre.replaceWith(newPre)
+            // 言語識別子の設定
+            let lang = "";
+            const langElement = codeWrapper.querySelector('.inline-block')
+            lang = langElement.textContent;
+            langElement.remove();
+            newPre.dataset.language = lang;
+        });
+        // turndownインスタンスの生成
+        const turndownService = new TurndownService({
+            headingStyle: 'atx',
+            hr: '---',
+            bulletListMarker: '-',
+            codeBlockStyle: 'fenced',
+        })
+        turndownService.use(turndownPluginGfm.gfm);
+        // 言語識別子をコードブロックに追加
+        turndownService.addRule('codeBlock', {
+            filter: ['pre'],
+            replacement: function (content, node) {
+                let lang = node.dataset.language;
+                if (lang) {
+                    return '```' + lang + '\n' + content + '```';
+                }
+                return '```\n' + content + '```';
+            }
+        });
+        let markdown = turndownService.turndown(response);
+        // Markdown文字列にいくつかの整形
+        markdown = markdown.replace(/(\s*- ) +/g, '$1');
+        // clipboardにコピー
+        navigator.clipboard.writeText(markdown)
+            .then(() => {
+                // コピー成功時の処理
+                // ボタンの内容を一時的に保存
+                const originalDiv = button.children[0];
+                // ボタンをチェックマークに変更
+                const icon = document.createElement('img');
+                icon.src = chrome.runtime.getURL('assets/clip-check.png');
+                icon.width = 16;
+                icon.height = 16;
+                icon.classList.add('ks-check-icon');
+                const newDiv = document.createElement('div');
+                newDiv.appendChild(icon);
+                button.children[0].replaceWith(newDiv);
+                // 元に戻す
+                setTimeout(() => {
+                    newDiv.replaceWith(originalDiv);
+                }, 2000);
+            })
+            .finally(() => {
+                // buttonからフォーカスを外す
+                button.blur();
+            });
+    }
+
     async function main() {
         config = await initConfig();
 
@@ -646,7 +716,20 @@
                             });
                         }
 
-                        // プレーンテキストでコピーする
+                        // コピーボタンのツールチップの文言修正
+                        const copyTooltipParent = parent.querySelector('div[data-radix-popper-content-wrapper]');
+                        if (copyTooltipParent) {
+                            const copyTooltip = copyTooltipParent.querySelector('span[role="tooltip"]');
+                            if (copyTooltip && copyTooltip.textContent === "Copy") {
+                                copyTooltipParent.querySelectorAll('span').forEach(span => {
+                                    if (span.textContent === "Copy") {
+                                        span.innerText = "Click: Normal Copy\nShift+Click: Simple Copy";
+                                    }
+                                });
+                            }
+                        }
+
+                        // Citation無しでコピーするイベントリスナーを追加
                         const copyButtons = parent.querySelectorAll('button[aria-label="Copy"]');
                         copyButtons.forEach(button => {
                             if (button.dataset.plainCopyButton) {
@@ -654,75 +737,12 @@
                             }
                             button.dataset.plainCopyButton = true;
 
-                            const p = button.parentElement.parentElement.parentElement;
                             button.addEventListener('click', (event) => {
                                 if (!event.shiftKey) {
                                     return;
                                 }
                                 event.stopImmediatePropagation();
-                                const response = p.children[1].cloneNode(true);
-                                // 要素の削除、整形
-                                response.querySelectorAll('a').forEach(a => {
-                                    a.remove();
-                                });
-                                response.querySelectorAll('div.codeWrapper').forEach(codeWrapper => {
-                                    const pre = codeWrapper.closest('pre');
-                                    // code を pre で囲む
-                                    const newPre = document.createElement('pre');
-                                    const code = codeWrapper.querySelector('code');
-                                    const newCode = document.createElement('code');
-                                    newCode.textContent = code.textContent;
-                                    newPre.appendChild(newCode);
-                                    pre.replaceWith(newPre)
-                                    // 言語識別子の設定
-                                    let lang = "";
-                                    const langElement = codeWrapper.querySelector('.inline-block')
-                                    lang = langElement.textContent;
-                                    langElement.remove();
-                                    newPre.dataset.language = lang;
-                                });
-                                // turndownインスタンスの生成
-                                const turndownService = new TurndownService({
-                                    headingStyle: 'atx',
-                                    hr: '---',
-                                    bulletListMarker: '-',
-                                    codeBlockStyle: 'fenced',
-                                })
-                                // 言語識別子をコードブロックに追加
-                                turndownService.addRule('codeBlock', {
-                                    filter: ['pre'],
-                                    replacement: function (content, node) {
-                                        let lang = node.dataset.language;
-                                        if (lang) {
-                                            return '```' + lang + '\n' + content + '```';
-                                        }
-                                        return '```\n' + content + '```';
-                                    }
-                                });
-                                let markdown = turndownService.turndown(response);
-                                // Markdown文字列にいくつかの整形
-                                markdown = markdown.replace(/(\s*- ) +/g, '$1');
-                                // clipboardにコピー
-                                navigator.clipboard.writeText(markdown)
-                                    .then(() => {
-                                        console.log('Copied to clipboard');
-                                        // コピー成功時の処理
-                                        // ボタンの内容を一時的に保存
-                                        const originalDiv = button.children[0];
-                                        // ボタンをチェックマークに変更
-                                        const svg = document.createElement('img');
-                                        svg.src = chrome.runtime.getURL('assets/check.svg');
-                                        svg.width = 16;
-                                        svg.height = 16;
-                                        svg.classList.add('ks-check-svg');
-                                        const newDiv = document.createElement('div');
-                                        newDiv.appendChild(svg);
-                                        button.children[0].replaceWith(newDiv);
-                                        // 元に戻す
-                                        setTimeout(() => {
-                                            newDiv.replaceWith(originalDiv);
-                                        }, 2000);
-                                    });
+                                simpleCopy(button);
                             }, true);
                         });
                     }

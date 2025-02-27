@@ -36,6 +36,8 @@ curl https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js -o lib/merm
 curl https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.2/dist/svg-pan-zoom.min.js -o lib/svg-pan-zoom.min.js
 # turndown.js ver: 7.2.0
 curl https://unpkg.com/turndown@7.2.0/dist/turndown.js -o lib/turndown.js
+# turndown-plugin-gfm.js ver: 1.0.2
+curl https://unpkg.com/turndown-plugin-gfm@1.0.2/dist/turndown-plugin-gfm.js -o lib/turndown-plugin-gfm.js
 ```
 
 ### Copyright
