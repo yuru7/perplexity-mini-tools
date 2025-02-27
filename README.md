@@ -3,7 +3,7 @@ This Chrome extension adds the following features to make Perplexity a little mo
 - Keyboard shortcuts
 - Mermaid diagram preview
 
-### Keyboard shortcuts
+## Keyboard shortcuts
 
 Markdown editor like operations:
 
@@ -23,18 +23,19 @@ Some optimizations:
 
 - `Esc`: Focus on the response area (You can scroll with the arrow keys)
 
-### Mermaid preview
+## Mermaid preview
 
 Automatically detects Mermaid diagrams within tags and adds a preview display button.
 
-The included `mermaid.min.js` is obtained from a CDN:
-https://www.jsdelivr.com/package/npm/mermaid
-
-It is downloaded using the following command. The version to download is fixed within the URL.
+## Library
 
 ```sh
 # Mermaid.js ver: 11.4.1
-curl https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js -o mermaid.min.js
+curl https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js -o lib/mermaid.min.js
+# svg-pan-zoom ver: 3.5.0
+curl https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.2/dist/svg-pan-zoom.min.js -o lib/svg-pan-zoom.min.js
+# turndown.js ver: 7.2.0
+curl https://unpkg.com/turndown@7.2.0/dist/turndown.js -o lib/turndown.js
 ```
 
 ### Copyright
