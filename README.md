@@ -19,9 +19,14 @@ Change Pro-search options:
 - `Ctrl + ArrowUp`: Switch to the previous model
 - `Ctrl + Shift + .`: Toggle Web search source
 
+Simple Copy:
+
+- `Shift + Click the Copy button` Copy text to clipboard without including citation links
+
 Some optimizations:
 
 - `Esc`: Focus on the response area (You can scroll with the arrow keys)
+- `Ctrl + V`: Prevents the cursor from jumping to the end when pasting text
 
 ## Mermaid preview
 

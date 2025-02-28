@@ -19,7 +19,7 @@
         // 設定読み込み
         const config = {};
         return new Promise((resolve) => {
-            chrome.storage.local.get(['markdownEditorLike', 'searchOption'], (data) => {
+            chrome.storage.local.get(['markdownEditorLike', 'searchOption', 'simpleCopy'], (data) => {
                 if (data.markdownEditorLike === undefined) {
                     config.markdownEditorLike = true;
                 } else {
@@ -30,6 +30,12 @@
                     config.searchOption = true;
                 } else {
                     config.searchOption = data.searchOption;
+                }
+
+                if (data.simpleCopy === undefined) {
+                    config.simpleCopy = true;
+                } else {
+                    config.simpleCopy = data.simpleCopy;
                 }
 
                 resolve(config);
@@ -737,35 +743,37 @@
                             });
                         }
 
-                        // コピーボタンのツールチップの文言修正
-                        const copyTooltipParent = parent.querySelector('div[data-radix-popper-content-wrapper]');
-                        if (copyTooltipParent) {
-                            const copyTooltip = copyTooltipParent.querySelector('span[role="tooltip"]');
-                            if (copyTooltip && copyTooltip.textContent === "Copy") {
-                                copyTooltipParent.querySelectorAll('span').forEach(span => {
-                                    if (span.textContent === "Copy") {
-                                        span.innerText = "Click: Normal Copy\nShift+Click: Simple Copy";
-                                    }
-                                });
+                        if (config.simpleCopy) {
+                            // コピーボタンのツールチップの文言修正
+                            const copyTooltipParent = parent.querySelector('div[data-radix-popper-content-wrapper]');
+                            if (copyTooltipParent) {
+                                const copyTooltip = copyTooltipParent.querySelector('span[role="tooltip"]');
+                                if (copyTooltip && copyTooltip.textContent === "Copy") {
+                                    copyTooltipParent.querySelectorAll('span').forEach(span => {
+                                        if (span.textContent === "Copy") {
+                                            span.innerText = "Click: Normal Copy\nShift+Click: Simple Copy";
+                                        }
+                                    });
+                                }
                             }
-                        }
 
-                        // Citation無しでコピーするイベントリスナーを追加
-                        const copyButtons = parent.querySelectorAll('button[aria-label="Copy"]');
-                        copyButtons.forEach(button => {
-                            if (button.dataset.plainCopyButton) {
-                                return;
-                            }
-                            button.dataset.plainCopyButton = true;
-
-                            button.addEventListener('click', (event) => {
-                                if (!event.shiftKey) {
+                            // Citation無しでコピーするイベントリスナーを追加
+                            const copyButtons = parent.querySelectorAll('button[aria-label="Copy"]');
+                            copyButtons.forEach(button => {
+                                if (button.dataset.simpleCopy) {
                                     return;
                                 }
-                                event.stopImmediatePropagation();
-                                simpleCopy(button);
-                            }, true);
-                        });
+                                button.dataset.simpleCopy = true;
+
+                                button.addEventListener('click', (event) => {
+                                    if (!event.shiftKey) {
+                                        return;
+                                    }
+                                    event.stopImmediatePropagation();
+                                    simpleCopy(button);
+                                }, true);
+                            });
+                        }
                     }
                 });
             });
