@@ -63,7 +63,7 @@
       align-items: start;
       height: 50vh;
       margin: 0 auto;
-      max-width: 600px;
+      max-width: 750px;
     }
 
     .options {
@@ -86,11 +86,19 @@
       margin-bottom: 6px;
     }
 
+    .option-item-child>.option-item-child {
+      margin-left: 1.8em;
+    }
+
     .option-item-description {
       font-size: 0.85rem;
       margin-top: 2px;
-      margin-left: 3px;
+      margin-left: 1.7rem;
       color: #444;
+    }
+
+    .option-item-description ul {
+      margin-left: -1.7rem;
     }
 
     .app-title {
@@ -105,6 +113,13 @@
       color: green;
       font-weight: bold;
       text-align: left;
+    }
+
+    .flex {
+      display: flex;
+      justify-content: start;
+      align-items: center;
+      gap: 0.8rem
     }
 
     @media (prefers-color-scheme: dark) {
@@ -147,7 +162,6 @@
       </header>
       <h1>Options</h1>
       <div class="options">
-
         <div class="option-item">
           <div class="option-item-title">Keyboard shortcuts</div>
           <div class="option-item-child">
@@ -168,6 +182,12 @@
                 </li>
               </ul>
             </div>
+          </div>
+          <div class="option-item-child">
+            <label for="ctrl-enter">
+              <input type="checkbox" id="ctrl-enter" name="ctrl-enter">
+              Line break with Enter, submit with Ctrl+Enter
+            </label>
           </div>
           <div class="option-item-child">
             <label for="shortcut-search-options">
@@ -208,18 +228,22 @@
             </div>
           </div>
           <div class="option-item-child">
-            <label>
-              default color theme
-            </label>
-            <div>
-              <select id="mermaid-theme">
-                <option value="auto">auto</option>
-                <option value="default">default</option>
-                <option value="neutral">neutral</option>
-                <option value="dark">dark</option>
-                <option value="forest">forest</option>
-                <option value="base">base</option>
-              </select>
+            <div class="flex">
+              <div>
+                <label>
+                  default color theme
+                </label>
+              </div>
+              <div>
+                <select id="mermaid-theme">
+                  <option value="auto">auto</option>
+                  <option value="default">default</option>
+                  <option value="neutral">neutral</option>
+                  <option value="dark">dark</option>
+                  <option value="forest">forest</option>
+                  <option value="base">base</option>
+                </select>
+              </div>
             </div>
             <div class="option-item-description">
               When set to "auto", either "default" or "dark" is selected according to the OS theme.

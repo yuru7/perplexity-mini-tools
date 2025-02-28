@@ -1,39 +1,37 @@
 // 設定読み込み
 document.addEventListener('DOMContentLoaded', () => {
-    // Markdownエディターライクな操作設定
-    chrome.storage.local.get('markdownEditorLike', (data) => {
+    chrome.storage.local.get(['markdownEditorLike', 'ctrlEnter', 'searchOption', 'simpleCopy', 'mermaidEnabled', 'mermaidTheme'], (data) => {
+        // Markdownエディターライクな操作設定
         if (data.markdownEditorLike === undefined) {
             document.getElementById('markdown-editor-like').checked = true;
-            return;
+        } else {
+            document.getElementById('markdown-editor-like').checked = data.markdownEditorLike;
         }
-        document.getElementById('markdown-editor-like').checked = data.markdownEditorLike;
-    });
-    // 検索オプション切り替えの設定
-    chrome.storage.local.get('searchOption', (data) => {
+        // 送信を Ctrl+Enter にする設定
+        if (data.ctrlEnter === undefined) {
+            document.getElementById('ctrl-enter').checked = false;
+        } else {
+            document.getElementById('ctrl-enter').checked = data.ctrlEnter;
+        }
+        // 検索オプション切り替えの設定
         if (data.searchOption === undefined) {
             document.getElementById('shortcut-search-options').checked = true;
-            return;
+        } else {
+            document.getElementById('shortcut-search-options').checked = data.searchOption;
         }
-        document.getElementById('shortcut-search-options').checked = data.searchOption;
-    });
-    // 引用リンク無しコピーの設定
-    chrome.storage.local.get('simpleCopy', (data) => {
+        // 引用リンク無しコピーの設定
         if (data.simpleCopy === undefined) {
             document.getElementById('shortcut-simple-copy').checked = true;
-            return;
+        } else {
+            document.getElementById('shortcut-simple-copy').checked = data.simpleCopy;
         }
-        document.getElementById('shortcut-simple-copy').checked = data.simpleCopy;
-    });
-    // Mermaidプレビュー 有効状態
-    chrome.storage.local.get('mermaidEnabled', (data) => {
+        // Mermaidプレビュー 有効状態
         if (data.mermaidEnabled === undefined) {
             document.getElementById('mermaid-enabled').checked = true;
-            return;
+        } else {
+            document.getElementById('mermaid-enabled').checked = data.mermaidEnabled;
         }
-        document.getElementById('mermaid-enabled').checked = data.mermaidEnabled;
-    });
-    // Mermaidのテーマ設定
-    chrome.storage.local.get('mermaidTheme', (data) => {
+        // Mermaidのテーマ設定
         document.getElementById('mermaid-theme').value = data.mermaidTheme || "auto";
     });
 });
@@ -45,6 +43,10 @@ document.querySelector('form').addEventListener('submit', (e) => {
     // Markdownエディターライクな操作設定
     const markdownEditorLike = document.getElementById('markdown-editor-like').checked;
     chrome.storage.local.set({ markdownEditorLike });
+
+    // 送信を Ctrl+Enter にする設定
+    const ctrlEnter = document.getElementById('ctrl-enter').checked;
+    chrome.storage.local.set({ ctrlEnter });
 
     // 検索オプションの設定
     const searchOption = document.getElementById('shortcut-search-options').checked;

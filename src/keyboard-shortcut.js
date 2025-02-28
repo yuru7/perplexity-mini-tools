@@ -18,11 +18,17 @@
         // 設定読み込み
         const config = {};
         return new Promise((resolve) => {
-            chrome.storage.local.get(['markdownEditorLike', 'searchOption', 'simpleCopy'], (data) => {
+            chrome.storage.local.get(['markdownEditorLike', 'searchOption', 'simpleCopy', 'ctrlEnter'], (data) => {
                 if (data.markdownEditorLike === undefined) {
                     config.markdownEditorLike = true;
                 } else {
                     config.markdownEditorLike = data.markdownEditorLike;
+                }
+
+                if (data.ctrlEnter === undefined) {
+                    config.ctrlEnter = false;
+                } else {
+                    config.ctrlEnter = data.ctrlEnter;
                 }
 
                 if (data.searchOption === undefined) {
@@ -631,7 +637,21 @@
         });
 
         // Markdownエディターライクな操作を追加
-        const mdTextarea = new MDTextarea(textarea, [MDTextarea.SHIFT_KEY], false);
+        // Ctrl+Enter 送信の設定を考慮する
+        let mdTextarea = null;
+        if (config.ctrlEnter) {
+            mdTextarea = new MDTextarea(textarea, [], false);
+            textarea.addEventListener('keydown', (event) => {
+                if (event.isComposing) {
+                    return;
+                }
+                if (!ctrlOrMetaKey(event) && event.code === 'Enter') {
+                    event.stopImmediatePropagation();
+                }
+            }, true);
+        } else {
+            mdTextarea = new MDTextarea(textarea, [MDTextarea.SHIFT_KEY], false);
+        }
         mdTextarea.enable();
     }
 
