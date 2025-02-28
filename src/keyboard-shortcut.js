@@ -2,7 +2,6 @@
     const QUICK_SEARCH_MODAL_SELECTOR = 'div[data-testid="quick-search-modal"] button';
     const MAIN_SEARCH_BOX_MODEL_SELECT_SELECTOR = 'div.gap-sm.flex > span:nth-child(1) > button';
     const MODEL_SELECT_AREA_OUTER_SELECTOR = 'div[data-placement]';
-    const MODEL_SELECT_AREA_SELECTOR = `${MODEL_SELECT_AREA_OUTER_SELECTOR} div[data-radix-scroll-area-viewport]`;
     const MODEL_SELECT_AREA_ITEM_SELECTOR = "div.group\\/item";
     const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = "div.pr.super";
     const MODEL_SELECT_AREA_ITEM_TARGET_SELECTOR = "div.group\\/item:nth-child(<N>)";
@@ -86,6 +85,14 @@
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
     async function selectModel(upOrDown) {
+        // textarea がアクティブな場合、カーソル位置を取得
+        let cursorPos = -1;
+        const activeElement = document.activeElement;
+        if (activeElement.tagName === 'TEXTAREA') {
+            const textarea = document.activeElement;
+            cursorPos = textarea.selectionStart;
+        }
+
         let button = document.querySelector(QUICK_SEARCH_MODAL_SELECTOR);
         if (!button) {
             // textareの2つ上のdivを取得して、その下から検索する
@@ -94,10 +101,9 @@
                 button = mainSearchBox.parentElement.parentElement.querySelector(MAIN_SEARCH_BOX_MODEL_SELECT_SELECTOR);
             }
         }
-        let modelSelectBox = document.querySelector(MODEL_SELECT_AREA_SELECTOR);
+        let modelSelectBox = document.querySelector(MODEL_SELECT_AREA_OUTER_SELECTOR);
 
         if (button && !modelSelectBox) {
-            // ボタンをクリックしてポップアップを表示してからモデルを切り替える
             try {
                 // ポップアップがちらつくのでいったん非表示にするCSSを適用
                 toggleDisplay(MODEL_SELECT_AREA_OUTER_SELECTOR);
@@ -108,16 +114,19 @@
                 // ポップアップ非表示CSSを削除
                 toggleDisplay()
             }
-
         } else if (modelSelectBox) {
             clickModel(upOrDown);
         } else {
             console.error('element not found');
         }
+        // textarea のカーソル位置を戻す
+        if (cursorPos !== -1) {
+            activeElement.setSelectionRange(cursorPos, cursorPos);
+        }
     }
 
     function clickModel(upOrDown) {
-        const modelSelectBox = document.querySelector(MODEL_SELECT_AREA_SELECTOR);
+        const modelSelectBox = document.querySelector(MODEL_SELECT_AREA_OUTER_SELECTOR);
         if (!modelSelectBox) {
             return;
         }
