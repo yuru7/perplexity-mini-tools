@@ -759,14 +759,16 @@
                         if (!parent) {
                             return;
                         }
-                        if (config.markdownEditorLike) {
-                            const textareas = parent.querySelectorAll("textarea:not([data-md-textarea])");
+
+                        const textareas = parent.querySelectorAll("textarea:not([data-md-textarea])");
+                        if (config.markdownEditorLike && textareas.length > 0) {
                             textareas.forEach(textarea => {
                                 setTextareaEventListeners(textarea);
                             });
                         }
 
-                        if (config.simpleCopy) {
+                        const copyButtons = parent.querySelectorAll('button[aria-label="Copy"]');
+                        if (config.simpleCopy && copyButtons.length > 0) {
                             // コピーボタンのツールチップの文言修正
                             const copyTooltipParent = parent.querySelector('div[data-radix-popper-content-wrapper]');
                             if (copyTooltipParent) {
@@ -774,14 +776,13 @@
                                 if (copyTooltip && copyTooltip.textContent === "Copy") {
                                     copyTooltipParent.querySelectorAll('span').forEach(span => {
                                         if (span.textContent === "Copy") {
-                                            span.innerText = "Click: Normal Copy\nShift+Click: Simple Copy";
+                                            span.innerText = "Click: Simple Copy\nShift+Click: Normal Copy";
                                         }
                                     });
                                 }
                             }
 
                             // Citation無しでコピーするイベントリスナーを追加
-                            const copyButtons = parent.querySelectorAll('button[aria-label="Copy"]');
                             copyButtons.forEach(button => {
                                 if (button.dataset.simpleCopy) {
                                     return;
@@ -789,7 +790,7 @@
                                 button.dataset.simpleCopy = true;
 
                                 button.addEventListener('click', (event) => {
-                                    if (!event.shiftKey) {
+                                    if (event.shiftKey) {
                                         return;
                                     }
                                     event.stopImmediatePropagation();
