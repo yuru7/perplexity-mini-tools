@@ -74,20 +74,6 @@
         return event.ctrlKey || event.metaKey;
     }
 
-    function focusScrollableContainerHandler(event) {
-        if (event.isComposing) {
-            return;
-        }
-        if (event.code === 'Escape') {
-            event.stopImmediatePropagation();
-            const scrollTarget = document.querySelector("textarea").closest(".scrollable-container")
-            if (scrollTarget) {
-                scrollTarget.style.outline = "none";
-                scrollTarget.focus();
-            }
-        }
-    }
-
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
     async function selectModel(upOrDown) {
@@ -261,7 +247,7 @@
 
         keydownHandler(e) {
             // 変換中操作では発動させない
-            if (event.isComposing) {
+            if (e.isComposing) {
                 return;
             }
 
@@ -631,28 +617,35 @@
             event.stopImmediatePropagation();
         }, true);
 
-        // Escape押下でスクロール可能なコンテナにフォーカスを移す
         textarea.addEventListener('keydown', (event) => {
-            focusScrollableContainerHandler(event);
-        });
+            if (event.isComposing) {
+                return;
+            }
+            // Escape押下でスクロール可能なコンテナにフォーカスを移す
+            if (event.code === 'Escape') {
+                event.stopImmediatePropagation();
+                const scrollTarget = document.querySelector("textarea").closest(".scrollable-container")
+                if (scrollTarget) {
+                    scrollTarget.style.outline = "none";
+                    scrollTarget.focus();
+                }
+            }
+            // Ctrl+Enter 送信の設定を考慮する
+            if (!config.markdownEditorLike && !ctrlOrMetaKey(event) && event.code === 'Enter') {
+                event.stopImmediatePropagation();
+            }
+        }, true);
 
         // Markdownエディターライクな操作を追加
-        // Ctrl+Enter 送信の設定を考慮する
-        let mdTextarea = null;
-        if (config.ctrlEnter) {
-            mdTextarea = new MDTextarea(textarea, [], false);
-            textarea.addEventListener('keydown', (event) => {
-                if (event.isComposing) {
-                    return;
-                }
-                if (!ctrlOrMetaKey(event) && event.code === 'Enter') {
-                    event.stopImmediatePropagation();
-                }
-            }, true);
-        } else {
-            mdTextarea = new MDTextarea(textarea, [MDTextarea.SHIFT_KEY], false);
+        if (config.markdownEditorLike) {
+            if (config.ctrlEnter) {
+                const mdTextarea = new MDTextarea(textarea, [], false);
+                mdTextarea.enable();
+            } else {
+                const mdTextarea = new MDTextarea(textarea, [MDTextarea.SHIFT_KEY], false);
+                mdTextarea.enable();
+            }
         }
-        mdTextarea.enable();
     }
 
     function simpleCopy(button) {
@@ -760,15 +753,12 @@
             }, true);
         }
 
-        // textarea へのイベントリスナーを追加
-        if (config.markdownEditorLike) {
-            // Markdown編集機能を追加
-            // ページ読み込み時と、DOM変更時に対応する
-            const textareas = document.querySelectorAll("main textarea:not([data-md-textarea])");
-            textareas.forEach(textarea => {
-                setTextareaEventListeners(textarea);
-            }, true);
-        }
+        // Markdown編集機能を追加
+        // ページ読み込み時と、DOM変更時に対応する
+        const textareas = document.querySelectorAll("main textarea:not([data-md-textarea])");
+        textareas.forEach(textarea => {
+            setTextareaEventListeners(textarea);
+        }, true);
 
         // DOM変更時の対応をする
         const observer = new MutationObserver((mutations) => {
@@ -781,11 +771,9 @@
                         }
 
                         const textareas = parent.querySelectorAll("textarea:not([data-md-textarea])");
-                        if (config.markdownEditorLike && textareas.length > 0) {
-                            textareas.forEach(textarea => {
-                                setTextareaEventListeners(textarea);
-                            });
-                        }
+                        textareas.forEach(textarea => {
+                            setTextareaEventListeners(textarea);
+                        });
 
                         const copyButtons = parent.querySelectorAll('button[aria-label="Copy"]');
                         if (config.simpleCopy && copyButtons.length > 0) {
