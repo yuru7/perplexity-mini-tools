@@ -438,10 +438,10 @@
             const pre = block.closest("pre");
             // プレビュー表示用のボタンを作成し、コードブロックの上部に追加
             const btnDiv = document.createElement("div");
-            btnDiv.classList.add("preview-button-wrapper");
+            btnDiv.classList.add("mermaid-preview-button-wrapper");
             const btn = document.createElement("button");
             btn.textContent = "Show Mermaid Diagram";
-            btn.classList.add("preview-button");
+            btn.classList.add("mermaid-preview-button");
             btnDiv.appendChild(btn);
             pre.parentNode.appendChild(btnDiv);
 

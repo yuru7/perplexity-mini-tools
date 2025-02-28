@@ -633,6 +633,16 @@
         response.querySelectorAll('a').forEach(a => {
             a.remove();
         });
+        // .mermaid-preview-button クラスの要素を削除
+        response.querySelectorAll('.mermaid-preview-button-wrapper').forEach(button => {
+            const parentDiv = button.parentElement;
+            const pre = parentDiv.querySelector('pre');
+            if (pre) {
+                pre.dataset.language = 'mermaid';
+            }
+            button.remove();
+        });
+        // pre 要素を整形
         response.querySelectorAll('div.codeWrapper').forEach(codeWrapper => {
             const pre = codeWrapper.closest('pre');
             // code を pre で囲む
@@ -641,13 +651,17 @@
             const newCode = document.createElement('code');
             newCode.textContent = code.textContent;
             newPre.appendChild(newCode);
-            pre.replaceWith(newPre)
             // 言語識別子の設定
             let lang = "";
             const langElement = codeWrapper.querySelector('.inline-block')
-            lang = langElement.textContent;
+            if (pre.dataset.language) {
+                lang = pre.dataset.language;
+            } else {
+                lang = langElement.textContent;
+            }
             langElement.remove();
             newPre.dataset.language = lang;
+            pre.replaceWith(newPre)
         });
         // turndownインスタンスの生成
         const turndownService = new TurndownService({

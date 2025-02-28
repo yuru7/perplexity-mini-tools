@@ -112,13 +112,13 @@
     justify-content: center;
 }
 
-.preview-button-wrapper {
+.mermaid-preview-button-wrapper {
     text-align: center;
     margin-top: -10px;
     margin-bottom: 6px;
 }
 
-.preview-button {
+.mermaid-preview-button {
     position: relative;
     font-size: 0.92rem;
     font-weight: normal;
@@ -130,13 +130,13 @@
     cursor: pointer;
 }
 
-.preview-button:hover {
+.mermaid-preview-button:hover {
     opacity: 1;
     background-color: rgba(155, 155, 155, 0.2);
     transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
-.preview-button:before {
+.mermaid-preview-button:before {
     content: '';
     width: 7px;
     height: 7px;
