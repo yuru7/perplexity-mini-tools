@@ -188,7 +188,6 @@
       return;
     }
 
-    button.click();
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
@@ -220,6 +219,8 @@
       childList: true,
       subtree: true,
     });
+    // モデル選択ボタンをクリック
+    button.click();
   }
 
   function clickModel(node, upOrDown) {
@@ -297,8 +298,8 @@
       mainSearchBox.parentElement.parentElement.querySelector(
         MAIN_SEARCH_BOX_SEARCH_SOURCE_SELECTOR
       );
-    if (searchSourceButton) {
-      searchSourceButton.click();
+    if (!searchSourceButton) {
+      return;
     }
 
     const observer = new MutationObserver((mutations) => {
@@ -340,6 +341,8 @@
       childList: true,
       subtree: true,
     });
+    // 検索ソースボタンをクリック
+    searchSourceButton.click();
   }
 
   class MDTextarea {
