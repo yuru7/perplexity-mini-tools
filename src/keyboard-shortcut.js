@@ -304,7 +304,7 @@
 
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
+        mutation.addedNodes.forEach(async (node) => {
           try {
             // ポップアップがちらつくのでいったん非表示にするCSSを適用
             node.style.display = "none";
@@ -315,12 +315,38 @@
             if (searchSourceBoxChildren.length === 0) {
               return;
             }
-            const webButton =
-              searchSourceBoxChildren[0].querySelector("button");
+            const webButton = node.querySelectorAll("button")[0];
             if (!webButton) {
               return;
             }
-            webButton.click();
+            const allButtons = node.querySelectorAll("button");
+
+            if (webButton.dataset.state === "checked") {
+              // すべてOFFにする
+              webButton.click();
+              for (let i = 1; i < allButtons.length; i++) {
+                if (allButtons[i].dataset.state !== "checked") {
+                  continue;
+                }
+                // HACK: ボタンクリックのタイミングでDOMが更新されてしまうので取得しなおす
+                await sleep(100);
+                const buttons = node.querySelectorAll("button");
+                buttons[i].click();
+              }
+            } else {
+              // webButtonのみONにする
+              webButton.click();
+              for (let i = 1; i < allButtons.length; i++) {
+                if (allButtons[i].dataset.state !== "checked") {
+                  continue;
+                }
+                // HACK: ボタンクリックのタイミングでDOMが更新されてしまうので取得しなおす
+                await sleep(50);
+                const buttons = node.querySelectorAll("button");
+                buttons[i].click();
+              }
+            }
+
             // ポップアップを閉じる
             mainSearchBox.focus();
 
@@ -998,6 +1024,10 @@
         // buttonからフォーカスを外す
         button.blur();
       });
+  }
+
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   async function main() {
