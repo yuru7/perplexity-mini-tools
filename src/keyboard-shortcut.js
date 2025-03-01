@@ -3,7 +3,6 @@
     'div[data-testid="quick-search-modal"] button';
   const MAIN_SEARCH_BOX_MODEL_SELECT_SELECTOR =
     "div.gap-sm.flex > span:nth-child(1) > button";
-  const MODEL_SELECT_AREA_OUTER_SELECTOR = "div[data-placement]";
   const MODEL_SELECT_AREA_ITEM_SELECTOR = "div.group\\/item";
   const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = "div.pr.super";
   const MODEL_SELECT_AREA_ITEM_TARGET_SELECTOR =
@@ -11,8 +10,6 @@
 
   const MAIN_SEARCH_BOX_SEARCH_SOURCE_SELECTOR =
     "div.gap-sm.flex > span:nth-child(2) > button";
-  const SEARCH_SOURCE_AREA_OUTER_SELECTOR = MODEL_SELECT_AREA_OUTER_SELECTOR;
-  const SEARCH_SOURCE_AREA_SELECTOR = `${SEARCH_SOURCE_AREA_OUTER_SELECTOR} div[data-radix-scroll-area-viewport]`;
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = MODEL_SELECT_AREA_ITEM_SELECTOR;
 
   const UP = 0;
@@ -148,20 +145,37 @@
     return event.ctrlKey || event.metaKey;
   }
 
-  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const textareaSelectionManager = {
+    pos: -1,
+    textarea: null,
+    setPosWhenTextareaActive: function () {
+      const activeElement = document.activeElement;
+      if (activeElement.tagName === "TEXTAREA") {
+        this.pos = activeElement.selectionStart;
+        this.textarea = activeElement;
+      }
+    },
+    applyPosToTextarea: function () {
+      if (this.textarea) {
+        this.textarea.setSelectionRange(this.pos, this.pos);
+      }
+    },
+    reset: function () {
+      this.pos = -1;
+      this.textarea = null;
+    },
+  };
 
   async function selectModel(upOrDown) {
     // textarea がアクティブな場合、カーソル位置を取得
-    let cursorPos = -1;
-    const activeElement = document.activeElement;
-    if (activeElement.tagName === "TEXTAREA") {
-      const textarea = document.activeElement;
-      cursorPos = textarea.selectionStart;
+    const isTextareaActive = document.activeElement.tagName === "TEXTAREA";
+    if (isTextareaActive) {
+      textareaSelectionManager.setPosWhenTextareaActive();
     }
 
     let button = document.querySelector(QUICK_SEARCH_MODAL_SELECTOR);
     if (!button) {
-      // textareの2つ上のdivを取得して、その下から検索する
+      // textareaの2つ上のdivを取得して、その下から検索する
       const mainSearchBox = document.querySelector("main textarea");
       if (mainSearchBox) {
         button = mainSearchBox.parentElement.parentElement.querySelector(
@@ -169,43 +183,50 @@
         );
       }
     }
-    let modelSelectBox = document.querySelector(
-      MODEL_SELECT_AREA_OUTER_SELECTOR
-    );
 
-    if (button && !modelSelectBox) {
-      try {
-        // ポップアップがちらつくのでいったん非表示にするCSSを適用
-        toggleDisplay(MODEL_SELECT_AREA_OUTER_SELECTOR);
-        button.click();
-        await sleep(50);
-        clickModel(upOrDown);
-      } finally {
-        // ポップアップ非表示CSSを削除
-        toggleDisplay();
-      }
-    } else if (modelSelectBox) {
-      clickModel(upOrDown);
-    } else {
-      console.error("element not found");
-    }
-    // textarea のカーソル位置を戻す
-    if (cursorPos !== -1) {
-      activeElement.setSelectionRange(cursorPos, cursorPos);
-    }
-  }
-
-  function clickModel(upOrDown) {
-    const modelSelectBox = document.querySelector(
-      MODEL_SELECT_AREA_OUTER_SELECTOR
-    );
-    if (!modelSelectBox) {
+    if (!button) {
       return;
     }
+
+    button.click();
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          try {
+            // ポップアップがちらつくのでいったん非表示にするCSSを適用
+            node.style.display = "none";
+
+            const modelSelectBoxChildren = node.querySelectorAll(
+              MODEL_SELECT_AREA_ITEM_SELECTOR
+            );
+            if (modelSelectBoxChildren.length === 0) {
+              return;
+            }
+            clickModel(node, upOrDown);
+            // textarea のカーソル位置を戻す
+            if (isTextareaActive) {
+              textareaSelectionManager.applyPosToTextarea();
+              textareaSelectionManager.reset();
+            }
+          } finally {
+            // ポップアップ非表示CSSを削除
+            node.style.display = "";
+          }
+        });
+      });
+      observer.disconnect();
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  function clickModel(node, upOrDown) {
     // 何番目の子要素にチェックが入っているかを調べる
     // チェック位置は子孫にある div.pr.super で判定
     let checkedIndex = -1;
-    let modelSelectBoxChildren = modelSelectBox.querySelectorAll(
+    let modelSelectBoxChildren = node.querySelectorAll(
       MODEL_SELECT_AREA_ITEM_SELECTOR
     );
     for (let i = 0; i < modelSelectBoxChildren.length; i++) {
@@ -231,7 +252,7 @@
       add = 0;
     }
     // 前後の要素をクリックする
-    const targetItem = modelSelectBox.querySelector(
+    const targetItem = node.querySelector(
       MODEL_SELECT_AREA_ITEM_TARGET_SELECTOR.replace("<N>", checkedIndex + add)
     );
     if (targetItem) {
@@ -253,7 +274,9 @@
       document.head.appendChild(style);
     } else {
       const style = document.getElementById("hidden-style");
-      style.remove();
+      if (style) {
+        style.remove();
+      }
     }
   }
 
@@ -263,46 +286,60 @@
     if (!mainSearchBox) {
       return;
     }
-    try {
-      // ポップアップがちらつくのでいったん非表示にするCSSを適用
-      toggleDisplay(SEARCH_SOURCE_AREA_OUTER_SELECTOR);
 
-      const searchSourceButton =
-        mainSearchBox.parentElement.parentElement.querySelector(
-          MAIN_SEARCH_BOX_SEARCH_SOURCE_SELECTOR
-        );
-      if (searchSourceButton) {
-        searchSourceButton.click();
-      }
-      await sleep(50);
-      const getSearchSourceBoxChildren = () => {
-        const searchSourceBox = document.querySelector(
-          SEARCH_SOURCE_AREA_SELECTOR
-        );
-        if (!searchSourceBox) {
-          return;
-        }
-        const searchSourceBoxChildren = searchSourceBox.querySelectorAll(
-          SEARCH_SOURCE_AREA_ITEM_SELECTOR
-        );
-        if (searchSourceBoxChildren.length === 0) {
-          return;
-        }
-        return searchSourceBoxChildren;
-      };
-      let searchSourceBoxChildren = getSearchSourceBoxChildren();
-      const webButton = searchSourceBoxChildren[0].querySelector("button");
-      if (!webButton) {
-        return;
-      }
-      webButton.click();
-
-      // ポップアップを閉じる
-      mainSearchBox.focus();
-    } finally {
-      // ポップアップ非表示CSSを削除
-      toggleDisplay();
+    // textarea がアクティブな場合、カーソル位置を取得
+    const isTextareaActive = document.activeElement.tagName === "TEXTAREA";
+    if (isTextareaActive) {
+      textareaSelectionManager.setPosWhenTextareaActive();
     }
+
+    const searchSourceButton =
+      mainSearchBox.parentElement.parentElement.querySelector(
+        MAIN_SEARCH_BOX_SEARCH_SOURCE_SELECTOR
+      );
+    if (searchSourceButton) {
+      searchSourceButton.click();
+    }
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          try {
+            // ポップアップがちらつくのでいったん非表示にするCSSを適用
+            node.style.display = "none";
+
+            const searchSourceBoxChildren = node.querySelectorAll(
+              SEARCH_SOURCE_AREA_ITEM_SELECTOR
+            );
+            if (searchSourceBoxChildren.length === 0) {
+              return;
+            }
+            const webButton =
+              searchSourceBoxChildren[0].querySelector("button");
+            if (!webButton) {
+              return;
+            }
+            webButton.click();
+            // ポップアップを閉じる
+            mainSearchBox.focus();
+
+            // textarea のカーソル位置を戻す
+            if (isTextareaActive) {
+              textareaSelectionManager.applyPosToTextarea();
+              textareaSelectionManager.reset();
+            }
+          } finally {
+            // ポップアップ非表示CSSを削除
+            node.style.display = "";
+          }
+        });
+      });
+      observer.disconnect();
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
   }
 
   class MDTextarea {
