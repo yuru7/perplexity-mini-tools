@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Perplexity Mini Tools",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "__MSG_extensionDescription__",
   "default_locale": "ja",
   "icons": {
@@ -12,7 +12,6 @@
   },
   "permissions": [
     "activeTab",
-    "scripting",
     "clipboardWrite",
     "storage"
   ],
