@@ -24,11 +24,6 @@
       font-size: 1.2rem;
     }
 
-    p {
-      text-align: center;
-      margin: 10px 0;
-    }
-
     form {
       padding: 20px 30px;
       background-color: #fff;
@@ -165,6 +160,17 @@
         <div class="option-item">
           <div class="option-item-title">Keyboard shortcuts</div>
           <div class="option-item-child">
+            <label for="shortcut-navigation">
+              <input type="checkbox" id="shortcut-navigation" name="shortcut-navigation">
+              Navigation
+            </label>
+            <div class="option-item-description">
+              <ul>
+                <li>[Ctrl(Cmd) + K] Navigate to "/library"</li>
+              </ul>
+            </div>
+          </div>
+          <div class="option-item-child">
             <label for="markdown-editor-like">
               <input type="checkbox" id="markdown-editor-like" name="markdown-editor-like">
               Markdown-editor-like operations
@@ -215,6 +221,7 @@
             <ul>
               <li>[Esc] Sets focus on the scrollable container instead of the textarea</li>
               <li>[Ctrl+V] Prevents the cursor from jumping to the end</li>
+                <li>When navigate to "/library", Sets focus on the search box</li>
             </ul>
           </div>
         </div>
@@ -254,9 +261,9 @@
           </div>
         </div>
 
-        <div class="submit">
+        <div class="submit flex">
           <button type="submit">Save</button>
-          <p id="confirmation-message">Saved. You must reload the Perplexity page to apply.</p>
+          <div id="confirmation-message">Saved. You must reload Perplexity to apply.</div>
         </div>
       </div class="options">
     </form>

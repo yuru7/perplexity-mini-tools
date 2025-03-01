@@ -23,7 +23,13 @@
     const config = {};
     return new Promise((resolve) => {
       chrome.storage.local.get(
-        ["markdownEditorLike", "searchOption", "simpleCopy", "ctrlEnter"],
+        [
+          "markdownEditorLike",
+          "searchOption",
+          "simpleCopy",
+          "ctrlEnter",
+          "navigation",
+        ],
         (data) => {
           if (data.markdownEditorLike === undefined) {
             config.markdownEditorLike = true;
@@ -47,6 +53,12 @@
             config.simpleCopy = true;
           } else {
             config.simpleCopy = data.simpleCopy;
+          }
+
+          if (data.navigation === undefined) {
+            config.navigation = true;
+          } else {
+            config.navigation = data.navigation;
           }
 
           resolve(config);
@@ -74,6 +86,61 @@
       event.preventDefault();
       event.stopImmediatePropagation();
       toggleWebInSearchSource();
+    }
+  }
+
+  function navigationHandler(event) {
+    if (event.isComposing) {
+      return;
+    }
+    // Ctrl+K でライブラリページに移動
+    if (config.navigation && ctrlOrMetaKey(event) && event.key === "k") {
+      if (location.pathname === "/library") {
+        return;
+      }
+      event.preventDefault();
+      const link = document.querySelector('a[href="/library"]');
+      if (link) {
+        link.click();
+        showLoadingIndicator();
+        // location が変更されたら非表示
+        const observer = new MutationObserver(() => {
+          hideLoadingIndicator();
+          observer.disconnect();
+        });
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+        });
+        return;
+      }
+      return;
+    }
+  }
+
+  // ローディングインジケーターを表示する関数
+  function showLoadingIndicator() {
+    // 既存のインジケーターがあれば削除
+    const existingLoader = document.getElementById("pmt-loading-indicator");
+    if (existingLoader) {
+      existingLoader.remove();
+    }
+
+    // 新しいローディングインジケーターを作成
+    const loader = document.createElement("div");
+    loader.id = "pmt-loading-indicator";
+    loader.innerHTML = `
+    <div class="pmt-spinner"></div>
+  `;
+
+    document.body.appendChild(loader);
+  }
+
+  // ローディングインジケーターを非表示にする関数
+  function hideLoadingIndicator() {
+    const loader = document.getElementById("pmt-loading-indicator");
+    if (loader) {
+      loader.remove();
     }
   }
 
@@ -901,7 +968,10 @@
       document.addEventListener(
         "keydown",
         (event) => {
+          // 検索オプション切り替え
           searchOptionHandler(event);
+          // ナビゲーションショートカット
+          navigationHandler(event);
         },
         true
       );
@@ -926,6 +996,21 @@
               return;
             }
 
+            // パスが /library のときはinput要素にフォーカス
+            if (location.pathname === "/library") {
+              const inputs = parent.querySelectorAll("input");
+              inputs.forEach((input) => {
+                if (input.closest("div.md\\:hidden")) {
+                  return;
+                }
+                if (input.dataset.focused) {
+                  return;
+                }
+                input.dataset.focused = "true";
+                input.focus();
+              });
+            }
+
             const textareas = parent.querySelectorAll(
               "textarea:not([data-md-textarea])"
             );
@@ -938,21 +1023,25 @@
             );
             if (config.simpleCopy && copyButtons.length > 0) {
               // コピーボタンのツールチップの文言修正
-              const copyTooltipParent = parent.querySelector(
-                "div[data-radix-popper-content-wrapper]"
-              );
-              if (copyTooltipParent) {
-                const copyTooltip = copyTooltipParent.querySelector(
-                  'span[role="tooltip"]'
-                );
-                if (copyTooltip && copyTooltip.textContent === "Copy") {
-                  copyTooltipParent.querySelectorAll("span").forEach((span) => {
-                    if (span.textContent === "Copy") {
-                      span.innerText =
-                        "Click: Simple Copy\nShift+Click: Normal Copy";
-                    }
-                  });
+              const copyTooltip = parent.querySelector('span[role="tooltip"]');
+              let copyTooltipParent;
+              if (copyTooltip) {
+                let current = copyTooltip;
+                while (current) {
+                  if (current.matches("div")) {
+                    copyTooltipParent = current;
+                    break;
+                  }
+                  current = current.parentElement;
                 }
+              }
+              if (copyTooltip && copyTooltip.textContent === "Copy") {
+                copyTooltipParent.querySelectorAll("span").forEach((span) => {
+                  if (span.textContent === "Copy") {
+                    span.innerText =
+                      "Click: Simple Copy\nShift+Click: Normal Copy";
+                  }
+                });
               }
 
               // Citation無しでコピーするイベントリスナーを追加
