@@ -213,6 +213,12 @@
   }
 }
 
+.search-result-active {
+  background-color: rgba(155, 155, 155, 0.2);
+  outline: 4px solid rgba(155, 155, 155, 0.2);
+  border-radius: 2px;
+}
+
 /* dark mode */
 @media (prefers-color-scheme: dark) {
   .ks-check-icon {

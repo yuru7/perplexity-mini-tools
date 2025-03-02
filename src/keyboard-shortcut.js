@@ -1066,19 +1066,150 @@
               return;
             }
 
-            // パスが /library のときはinput要素にフォーカス
             if (location.pathname === "/library") {
+              const targetLinks = {
+                activeIndex: -1,
+                links: null,
+                init: (outer) => {
+                  targetLinks.links = outer.querySelectorAll(
+                    'a[href^="/search/"]'
+                  );
+                  if (targetLinks.links.length === 0) {
+                    return;
+                  }
+                  targetLinks.activeIndex = 0;
+                  for (let i = 0; i < targetLinks.links.length; i++) {
+                    if (i === targetLinks.activeIndex) {
+                      targetLinks.links[i].classList.add(
+                        "search-result-active"
+                      );
+                    } else {
+                      targetLinks.links[i].classList.remove(
+                        "search-result-active"
+                      );
+                    }
+                  }
+                  if (targetLinks.activeIndex > 0) {
+                    targetLinks.links[targetLinks.activeIndex].scrollIntoView({
+                      block: "nearest",
+                    });
+                  }
+                  return targetLinks;
+                },
+              };
+
+              function activeLinkHandler(event) {
+                if (event.isComposing) {
+                  return;
+                }
+                if (targetLinks.activeIndex === -1) {
+                  return;
+                }
+
+                if (event.key === "Enter") {
+                  targetLinks.links[targetLinks.activeIndex].click();
+                  return;
+                }
+
+                if (event.code === "ArrowUp") {
+                  targetLinks.activeIndex =
+                    (targetLinks.activeIndex - 1 + targetLinks.links.length) %
+                    targetLinks.links.length;
+                } else if (event.code === "ArrowDown") {
+                  targetLinks.activeIndex =
+                    (targetLinks.activeIndex + 1) % targetLinks.links.length;
+                } else {
+                  return;
+                }
+
+                event.preventDefault();
+                targetLinks.links.forEach((link, index) => {
+                  if (index === targetLinks.activeIndex) {
+                    link.classList.add("search-result-active");
+                  } else {
+                    link.classList.remove("search-result-active");
+                  }
+                });
+                // スクロール
+                targetLinks.links[targetLinks.activeIndex].scrollIntoView({
+                  block: "nearest",
+                });
+              }
+
               const inputs = parent.querySelectorAll("input");
+              let targetInput;
               inputs.forEach((input) => {
+                // パスが /library のときはinput要素にフォーカス
+                // input要素にフォーカスした際に、イベントトリガーを追加
+
                 if (input.closest("div.md\\:hidden")) {
                   return;
                 }
                 if (input.dataset.focused) {
+                  targetInput = input;
                   return;
                 }
-                input.dataset.focused = "true";
-                input.focus();
+                targetInput = input;
+                targetInput.dataset.focused = "true";
+                targetInput.focus();
+                targetInput.addEventListener(
+                  "keydown",
+                  activeLinkHandler,
+                  true
+                );
+
+                if (config.navigation) {
+                  let outer;
+                  let current = targetInput;
+                  while (current) {
+                    if (current.querySelector('a[href^="/search/"]')) {
+                      outer = current;
+                      break;
+                    }
+                    current = current.parentElement;
+                  }
+                  if (!outer) {
+                    return;
+                  }
+
+                  targetLinks.init(outer);
+
+                  // outerに変更があった場合、targetLinksを初期化する
+                  const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                      if (mutation.type === "childList") {
+                        // 追加されたノードに検索リンクが含まれている場合のみ初期化する
+                        const hasSearchLinks = Array.from(
+                          mutation.addedNodes
+                        ).some((node) => {
+                          if (node.nodeType !== Node.ELEMENT_NODE) return false;
+                          // 要素自体がリンクか、リンクを含んでいるか確認
+                          return (
+                            (node.tagName === "A" &&
+                              node
+                                .getAttribute("href")
+                                ?.startsWith("/search/")) ||
+                            (node.querySelector &&
+                              node.querySelector('a[href^="/search/"]'))
+                          );
+                        });
+
+                        if (hasSearchLinks) {
+                          targetLinks.init(outer);
+                        }
+                      }
+                    });
+                  });
+                  observer.observe(outer, {
+                    childList: true,
+                    subtree: true,
+                  });
+                }
+
+                return;
               });
+
+              return;
             }
 
             const textareas = parent.querySelectorAll(
