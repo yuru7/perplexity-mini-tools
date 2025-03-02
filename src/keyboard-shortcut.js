@@ -1111,6 +1111,7 @@
                   return;
                 }
 
+                let loopedNavigation = false;
                 if (event.code === "ArrowUp") {
                   targetLinks.activeIndex =
                     (targetLinks.activeIndex - 1 + targetLinks.links.length) %
@@ -1118,6 +1119,9 @@
                 } else if (event.code === "ArrowDown") {
                   targetLinks.activeIndex =
                     (targetLinks.activeIndex + 1) % targetLinks.links.length;
+                  if (targetLinks.activeIndex === 0) {
+                    loopedNavigation = true;
+                  }
                 } else {
                   return;
                 }
@@ -1134,6 +1138,16 @@
                 targetLinks.links[targetLinks.activeIndex].scrollIntoView({
                   block: "nearest",
                 });
+                if (targetLinks.activeIndex === 0) {
+                  const scrollContainer = targetLinks.links[
+                    targetLinks.activeIndex
+                  ].closest(".scrollable-container");
+                  if (scrollContainer) {
+                    if (loopedNavigation) {
+                      scrollContainer.scrollTop = 0;
+                    }
+                  }
+                }
               }
 
               const inputs = parent.querySelectorAll("input");
