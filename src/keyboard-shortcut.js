@@ -1142,9 +1142,15 @@
                 // パスが /library のときはinput要素にフォーカス
                 // input要素にフォーカスした際に、イベントトリガーを追加
 
-                if (input.closest("div.md\\:hidden")) {
-                  return;
+                // 親要素が非表示の場合、何もしない
+                let ele = input;
+                while (ele) {
+                  if (window.getComputedStyle(ele).display === "none") {
+                    return;
+                  }
+                  ele = ele.parentElement;
                 }
+
                 if (input.dataset.focused) {
                   targetInput = input;
                   return;
