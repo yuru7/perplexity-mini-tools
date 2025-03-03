@@ -5,7 +5,12 @@ This Chrome extension adds the following features to make Perplexity a little mo
 
 ## Keyboard shortcuts
 
-Markdown editor like operations:
+Navigation:
+
+- `Ctrl(Cmd) + K`: Navigate to "/library"
+- `Up/Down & Enter on "/library" search box`: Navigate through search results
+
+Markdown-editor-like operations:
 
 - `Shift + Enter`: Add Markdown list symbols and indentation along with line breaks
 - `Tab`: Indent the current line (Selection operation support)
