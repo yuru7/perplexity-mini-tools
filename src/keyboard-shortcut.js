@@ -932,8 +932,8 @@
   function simpleCopy(button) {
     const buttonParent = button.parentElement.parentElement.parentElement;
     const response = buttonParent.children[1].cloneNode(true);
-    // 要素の削除、整形
-    response.querySelectorAll("a").forEach((a) => {
+    // 引用リンクの削除
+    response.querySelectorAll("a.citation").forEach((a) => {
       a.remove();
     });
     // .mermaid-preview-button クラスの要素を削除
@@ -996,9 +996,18 @@
         return content;
       },
     });
+    // a 要素で contentText と href が同じ場合はプレーンテキストにする
+    turndownService.addRule("link", {
+      filter: (node) => {
+        return node.nodeName === "A" && node.textContent === node.href;
+      },
+      replacement: function (content) {
+        return content;
+      },
+    });
     let markdown = turndownService.turndown(response);
     // Markdown文字列にいくつかの整形
-    markdown = markdown.replace(/(\s*- ) +/g, "$1");
+    markdown = markdown.replace(/(\s*(-|[0-9]+\.) ) +/g, "$1");
     // clipboardにコピー
     navigator.clipboard
       .writeText(markdown)
@@ -1196,6 +1205,10 @@
 
                   // outerに変更があった場合、targetLinksを初期化する
                   const observer = new MutationObserver((mutations) => {
+                    if (location.pathname !== "/library") {
+                      observer.disconnect();
+                      return;
+                    }
                     mutations.forEach((mutation) => {
                       if (mutation.type === "childList") {
                         // 追加されたノードに検索リンクが含まれている場合のみ初期化する
