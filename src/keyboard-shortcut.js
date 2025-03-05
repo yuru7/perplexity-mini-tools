@@ -15,6 +15,12 @@
   const UP = 0;
   const DOWN = 1;
 
+  const leftSidebarState = {
+    isFocused: false,
+    items: null,
+    focusIndex: -1,
+  };
+
   async function initConfig() {
     // 設定読み込み
     const config = {};
@@ -65,6 +71,10 @@
   }
   let config = null;
 
+  function ctrlOrMetaKey(event) {
+    return event.ctrlKey || event.metaKey;
+  }
+
   function searchOptionHandler(event) {
     if (event.isComposing) {
       return;
@@ -87,11 +97,15 @@
   }
 
   function navigationHandler(event) {
+    if (!config.navigation) {
+      return;
+    }
     if (event.isComposing) {
       return;
     }
     // Ctrl+K でライブラリページに移動
-    if (config.navigation && ctrlOrMetaKey(event) && event.key === "k") {
+    if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "KeyK") {
+      event.preventDefault();
       if (location.pathname === "/library") {
         return;
       }
@@ -111,6 +125,34 @@
         });
         return;
       }
+      return;
+    }
+    // Ctrl+Shift+K でスペースページに移動
+    if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "KeyK") {
+      event.preventDefault();
+      if (location.pathname === "/spaces") {
+        return;
+      }
+      const link = document.querySelector('a[href="/spaces"]');
+      if (link) {
+        link.click();
+        showLoadingIndicator();
+        // location が変更されたら非表示
+        const observer = new MutationObserver(() => {
+          hideLoadingIndicator();
+          observer.disconnect();
+        });
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+        });
+        return;
+      }
+    }
+    // Ctrl+B でレフトサイドバーにフォーカス
+    if (ctrlOrMetaKey(event) && event.key === "b") {
+      event.preventDefault();
+      focusLeftSidebar();
       return;
     }
   }
@@ -141,8 +183,80 @@
     }
   }
 
-  function ctrlOrMetaKey(event) {
-    return event.ctrlKey || event.metaKey;
+  function focusLeftSidebar() {
+    const leftSidebar = document.querySelector("div.group\\/bar");
+    if (!leftSidebar) {
+      return;
+    }
+    let leftSidebarItems = leftSidebar.querySelectorAll("a");
+    if (leftSidebarItems.length === 0) {
+      return;
+    }
+
+    // 先頭はロゴなので削除
+    leftSidebarItems = Array.from(leftSidebarItems).slice(1);
+
+    leftSidebarState.items = leftSidebarItems;
+    leftSidebarItems.forEach((item, index) => {
+      if (item.dataset.sidebarFocusedEventAdded) {
+        return;
+      }
+      item.dataset.sidebarFocusedEventAdded = true;
+      item.addEventListener(
+        "focus",
+        (event) => {
+          event.target.classList.add("sidebar-focus");
+          leftSidebarState.isFocused = true;
+          leftSidebarState.focusIndex = index;
+        },
+        true
+      );
+      item.addEventListener(
+        "blur",
+        (event) => {
+          event.target.classList.remove("sidebar-focus");
+          leftSidebarState.isFocused = false;
+          leftSidebarState.focusIndex = -1;
+        },
+        true
+      );
+    });
+
+    leftSidebarItems[0].focus();
+  }
+
+  function selectLeftSidebarItem(event) {
+    if (!leftSidebarState.isFocused) {
+      return;
+    }
+    if (event.isComposing) {
+      return;
+    }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const focusIndex = leftSidebarState.focusIndex;
+    if (
+      event.code === "Escape" ||
+      (ctrlOrMetaKey(event) && event.code === "KeyB")
+    ) {
+      leftSidebarState.items[focusIndex].blur();
+    }
+    if (event.code === "Enter") {
+      leftSidebarState.items[focusIndex].click();
+      return;
+    }
+    if (event.code === "ArrowDown") {
+      leftSidebarState.items[focusIndex].blur();
+      leftSidebarState.items[
+        (focusIndex + 1) % leftSidebarState.items.length
+      ].focus();
+    } else if (event.code === "ArrowUp") {
+      leftSidebarState.items[focusIndex].blur();
+      leftSidebarState.items[
+        (focusIndex - 1 + leftSidebarState.items.length) %
+          leftSidebarState.items.length
+      ].focus();
+    }
   }
 
   const textareaSelectionManager = {
@@ -1047,6 +1161,11 @@
       document.addEventListener(
         "keydown",
         (event) => {
+          // 左サイドバーがフォーカスされている場合の処理
+          if (leftSidebarState.isFocused) {
+            selectLeftSidebarItem(event);
+            return;
+          }
           // 検索オプション切り替え
           searchOptionHandler(event);
           // ナビゲーションショートカット
@@ -1075,6 +1194,7 @@
               return;
             }
 
+            // ライブラリページのショートカット
             if (location.pathname === "/library") {
               const targetLinks = {
                 activeIndex: -1,
@@ -1115,7 +1235,7 @@
                   return;
                 }
 
-                if (event.key === "Enter") {
+                if (event.code === "Enter") {
                   targetLinks.links[targetLinks.activeIndex].click();
                   return;
                 }
@@ -1245,6 +1365,7 @@
               return;
             }
 
+            // スペース選択のショートカット
             if (location.pathname === "/spaces") {
               const targetItem = document.querySelector(".contents a");
               if (!targetItem) {
@@ -1278,7 +1399,7 @@
                     "a.space-selection-active"
                   );
 
-                  if (event.key === "Enter") {
+                  if (event.code === "Enter") {
                     targetItem.click();
                     return;
                   }

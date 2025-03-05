@@ -95,7 +95,7 @@
 #mermaid-popup-copy:hover,
 #mermaid-popup-download:hover,
 #mermaid-popup-close:hover {
-  background-color: rgba(155, 155, 155, 0.2);
+  background-color: rgba(155, 155, 155, 0.18);
   transition: background-color 0.2s ease;
 }
 
@@ -132,7 +132,7 @@
 
 .mermaid-preview-button:hover {
   opacity: 1;
-  background-color: rgba(155, 155, 155, 0.2);
+  background-color: rgba(155, 155, 155, 0.18);
   transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
@@ -194,7 +194,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.4);
   z-index: 10000;
 }
 
@@ -214,15 +214,36 @@
 }
 
 .search-result-active {
-  background-color: rgba(155, 155, 155, 0.2);
-  outline: 4px solid rgba(155, 155, 155, 0.2);
+  background-color: rgba(155, 155, 155, 0.18);
+  outline: 4px solid rgba(155, 155, 155, 0.18);
   border-radius: 2px;
 }
 
 .space-selection-active {
-  outline: 3px solid rgba(32, 154, 171, 0.4);
+  outline: 3px solid rgba(32, 154, 171, 0.5);
   outline-offset: 3px;
   border-radius: 2px;
+}
+
+.space-selection-active > div {
+  background-color: rgba(155, 155, 155, 0.18);
+}
+
+.sidebar-focus {
+  position: relative;
+  outline: none;
+  background-color: rgba(155, 155, 155, 0.18);
+  transition: background-color 0.1s ease;
+}
+
+.sidebar-focus::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: rgba(32, 154, 171, 0.5);
 }
 
 /* dark mode */
