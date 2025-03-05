@@ -1245,6 +1245,75 @@
               return;
             }
 
+            if (location.pathname === "/spaces") {
+              const targetItem = document.querySelector(".contents a");
+              if (!targetItem) {
+                return;
+              }
+              targetItem.classList.add("space-selection-active");
+
+              if (document.body.dataset.spacesEventAdded) {
+                return;
+              }
+
+              document.body.dataset.spacesEventAdded = true;
+              document.body.addEventListener(
+                "keydown",
+                (event) => {
+                  if (location.pathname !== "/spaces") {
+                    return;
+                  }
+                  if (event.isComposing) {
+                    return;
+                  }
+
+                  const tmp = document.querySelector(".contents a");
+                  if (!tmp) {
+                    return;
+                  }
+
+                  const spacesParent = tmp.parentElement;
+                  const items = spacesParent.querySelectorAll("a");
+                  let targetItem = spacesParent.querySelector(
+                    "a.space-selection-active"
+                  );
+
+                  if (event.key === "Enter") {
+                    targetItem.click();
+                    return;
+                  }
+
+                  if (event.code === "ArrowUp" || event.code === "ArrowLeft") {
+                    event.preventDefault();
+                    targetItem.classList.remove("space-selection-active");
+                    targetItem =
+                      items[
+                        (Array.from(items).indexOf(targetItem) -
+                          1 +
+                          items.length) %
+                          items.length
+                      ];
+                    targetItem.classList.add("space-selection-active");
+                    targetItem.scrollIntoView({ block: "nearest" });
+                  } else if (
+                    event.code === "ArrowDown" ||
+                    event.code === "ArrowRight"
+                  ) {
+                    event.preventDefault();
+                    targetItem.classList.remove("space-selection-active");
+                    targetItem =
+                      items[
+                        (Array.from(items).indexOf(targetItem) + 1) %
+                          items.length
+                      ];
+                    targetItem.classList.add("space-selection-active");
+                    targetItem.scrollIntoView({ block: "nearest" });
+                  }
+                },
+                true
+              );
+            }
+
             const textareas = parent.querySelectorAll(
               "textarea:not([data-md-textarea])"
             );
