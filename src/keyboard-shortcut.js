@@ -12,6 +12,10 @@
     "div.gap-sm.flex > span:nth-child(2) > button";
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = MODEL_SELECT_AREA_ITEM_SELECTOR;
 
+  const LIBRARY_PATHNAME = "/library";
+  const SPACES_PATHNAME = "/spaces";
+  const SEARCH_PATHNAME = "/search";
+
   const UP = 0;
   const DOWN = 1;
 
@@ -106,11 +110,11 @@
     // Ctrl+K でライブラリページに移動
     if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "KeyK") {
       event.preventDefault();
-      if (location.pathname === "/library") {
+      if (location.pathname === LIBRARY_PATHNAME) {
         return;
       }
       event.preventDefault();
-      const link = document.querySelector('a[href="/library"]');
+      const link = document.querySelector(`a[href="${LIBRARY_PATHNAME}"]`);
       if (link) {
         link.click();
         showLoadingIndicator();
@@ -130,10 +134,10 @@
     // Ctrl+Shift+K でスペースページに移動
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "KeyK") {
       event.preventDefault();
-      if (location.pathname === "/spaces") {
+      if (location.pathname === SPACES_PATHNAME) {
         return;
       }
-      const link = document.querySelector('a[href="/spaces"]');
+      const link = document.querySelector(`a[href="${SPACES_PATHNAME}"]`);
       if (link) {
         link.click();
         showLoadingIndicator();
@@ -1195,13 +1199,13 @@
             }
 
             // ライブラリページのショートカット
-            if (location.pathname === "/library") {
+            if (location.pathname === LIBRARY_PATHNAME) {
               const targetLinks = {
                 activeIndex: -1,
                 links: null,
                 init: (outer) => {
                   targetLinks.links = outer.querySelectorAll(
-                    'a[href^="/search/"]'
+                    `a[href^="${SEARCH_PATHNAME}/"]`
                   );
                   if (targetLinks.links.length === 0) {
                     return;
@@ -1311,7 +1315,7 @@
                   let outer;
                   let current = targetInput;
                   while (current) {
-                    if (current.querySelector('a[href^="/search/"]')) {
+                    if (current.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`)) {
                       outer = current;
                       break;
                     }
@@ -1325,7 +1329,7 @@
 
                   // outerに変更があった場合、targetLinksを初期化する
                   const observer = new MutationObserver((mutations) => {
-                    if (location.pathname !== "/library") {
+                    if (location.pathname !== LIBRARY_PATHNAME) {
                       observer.disconnect();
                       return;
                     }
@@ -1341,9 +1345,9 @@
                             (node.tagName === "A" &&
                               node
                                 .getAttribute("href")
-                                ?.startsWith("/search/")) ||
+                                ?.startsWith(`${SEARCH_PATHNAME}/`)) ||
                             (node.querySelector &&
-                              node.querySelector('a[href^="/search/"]'))
+                              node.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`))
                           );
                         });
 
@@ -1366,7 +1370,7 @@
             }
 
             // スペース選択のショートカット
-            if (location.pathname === "/spaces") {
+            if (location.pathname === SPACES_PATHNAME) {
               const targetItem = document.querySelector(".contents a");
               if (!targetItem) {
                 return;
@@ -1381,7 +1385,7 @@
               document.body.addEventListener(
                 "keydown",
                 (event) => {
-                  if (location.pathname !== "/spaces") {
+                  if (location.pathname !== SPACES_PATHNAME) {
                     return;
                   }
                   if (event.isComposing) {
