@@ -1315,7 +1315,9 @@
                   let outer;
                   let current = targetInput;
                   while (current) {
-                    if (current.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`)) {
+                    if (
+                      current.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`)
+                    ) {
                       outer = current;
                       break;
                     }
@@ -1347,7 +1349,9 @@
                                 .getAttribute("href")
                                 ?.startsWith(`${SEARCH_PATHNAME}/`)) ||
                             (node.querySelector &&
-                              node.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`))
+                              node.querySelector(
+                                `a[href^="${SEARCH_PATHNAME}/"]`
+                              ))
                           );
                         });
 
@@ -1371,6 +1375,10 @@
 
             // スペース選択のショートカット
             if (location.pathname === SPACES_PATHNAME) {
+              if (document.querySelector(".space-selection-active")) {
+                return;
+              }
+
               const targetItem = document.querySelector(".contents a");
               if (!targetItem) {
                 return;
@@ -1389,6 +1397,10 @@
                     return;
                   }
                   if (event.isComposing) {
+                    return;
+                  }
+                  if (document.body.querySelector("body > div")) {
+                    // ポップアップが表示されている場合は何もしない
                     return;
                   }
 
