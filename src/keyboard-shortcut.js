@@ -1388,7 +1388,21 @@
                   return;
                 }
 
-                if (event.code === "ArrowUp" || event.code === "ArrowLeft") {
+                // 折り返し要素数を取得する
+                // a要素はカードスタイルで画面サイズに応じて折り返しが発生するので、
+                // 画面上の絶対位置が前要素より左位置になったところで折り返し要素数とする
+                let wrapCount = 0;
+                for (let i = 1; i < items.length; i++) {
+                  if (
+                    items[i].getBoundingClientRect().left <
+                    items[i - 1].getBoundingClientRect().left
+                  ) {
+                    wrapCount = i + 1;
+                    break;
+                  }
+                }
+
+                if (event.code === "ArrowLeft") {
                   event.preventDefault();
                   targetItem.classList.remove("space-selection-active");
                   targetItem =
@@ -1400,16 +1414,33 @@
                     ];
                   targetItem.classList.add("space-selection-active");
                   targetItem.scrollIntoView({ block: "nearest" });
-                } else if (
-                  event.code === "ArrowDown" ||
-                  event.code === "ArrowRight"
-                ) {
+                } else if (event.code === "ArrowRight") {
                   event.preventDefault();
                   targetItem.classList.remove("space-selection-active");
                   targetItem =
                     items[
                       (Array.from(items).indexOf(targetItem) + 1) % items.length
                     ];
+                  targetItem.classList.add("space-selection-active");
+                  targetItem.scrollIntoView({ block: "nearest" });
+                } else if (event.code === "ArrowUp") {
+                  event.preventDefault();
+                  let index = Array.from(items).indexOf(targetItem) - wrapCount;
+                  if (index < 0) {
+                    return;
+                  }
+                  targetItem.classList.remove("space-selection-active");
+                  targetItem = items[index];
+                  targetItem.classList.add("space-selection-active");
+                  targetItem.scrollIntoView({ block: "nearest" });
+                } else if (event.code === "ArrowDown") {
+                  event.preventDefault();
+                  let index = Array.from(items).indexOf(targetItem) + wrapCount;
+                  if (index >= items.length) {
+                    return;
+                  }
+                  targetItem.classList.remove("space-selection-active");
+                  targetItem = items[index];
                   targetItem.classList.add("space-selection-active");
                   targetItem.scrollIntoView({ block: "nearest" });
                 }
