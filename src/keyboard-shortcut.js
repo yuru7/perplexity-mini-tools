@@ -248,6 +248,7 @@
     }
     if (event.code === "Enter") {
       leftSidebarState.items[focusIndex].click();
+      leftSidebarState.items[focusIndex].blur();
       return;
     }
     if (event.code === "ArrowDown") {
