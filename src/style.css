@@ -215,8 +215,16 @@
 
 .search-result-active {
   background-color: rgba(155, 155, 155, 0.18);
-  outline: 4px solid rgba(155, 155, 155, 0.18);
   border-radius: 2px;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(155, 155, 155, 0.18);
+}
+
+.collection-active {
+  background-color: rgba(155, 155, 155, 0.18);
+  border-radius: 2px;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(155, 155, 155, 0.18);
 }
 
 .space-selection-active {

@@ -14,6 +14,7 @@
 
   const LIBRARY_PATHNAME = "/library";
   const SPACES_PATHNAME = "/spaces";
+  const SPACE_DETAIL_PATHNAME = "/collections";
   const SEARCH_PATHNAME = "/search";
 
   const UP = 0;
@@ -1447,6 +1448,74 @@
               },
               true
             );
+          }
+
+          // スペース個別画面のショートカット
+          if (location.pathname.startsWith(SPACE_DETAIL_PATHNAME)) {
+            const scrollableContainer = parent.querySelector(
+              ".scrollable-container"
+            );
+            if (!scrollableContainer) {
+              return;
+            }
+
+            if (scrollableContainer.dataset.spaceDetailEventAdded) {
+              return;
+            }
+            scrollableContainer.dataset.spaceDetailEventAdded = true;
+
+            scrollableContainer.addEventListener("focus", (event) => {
+              const links = scrollableContainer.querySelectorAll("a");
+
+              links.forEach((link, index) => {
+                if (index === 0) {
+                  link.focus();
+                  link.classList.add("collection-active");
+                } else {
+                  link.classList.remove("collection-active");
+                }
+              });
+            });
+
+            scrollableContainer.addEventListener("keydown", (event) => {
+              if (event.isComposing) {
+                return;
+              }
+
+              const activeLink = scrollableContainer.querySelector(
+                "a.collection-active"
+              );
+              if (!activeLink) {
+                return;
+              }
+
+              if (event.code === "Enter") {
+                activeLink.click();
+                return;
+              }
+
+              const links = Array.from(
+                scrollableContainer.querySelectorAll("a")
+              );
+              const index = links.indexOf(activeLink);
+              if (event.code === "ArrowUp") {
+                event.preventDefault();
+                const newIndex = index > 0 ? index - 1 : links.length - 1;
+                const target = links[newIndex];
+                target.focus();
+                target.classList.add("collection-active");
+                links[index].classList.remove("collection-active");
+                target.scrollIntoView({ block: "nearest" });
+              } else if (event.code === "ArrowDown") {
+                event.preventDefault();
+                const newIndex = index < links.length - 1 ? index + 1 : 0;
+                const target = links[newIndex];
+                target.focus();
+                target.classList.add("collection-active");
+                links[index].classList.remove("collection-active");
+                target.scrollIntoView({ block: "nearest" });
+              }
+            });
           }
 
           const textareas = parent.querySelectorAll(
