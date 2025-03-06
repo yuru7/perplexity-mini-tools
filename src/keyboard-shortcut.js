@@ -1157,6 +1157,317 @@
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  function mainObserver(mutations) {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const parent = node.parentElement;
+          if (!parent) {
+            return;
+          }
+
+          // ライブラリページのショートカット
+          if (location.pathname === LIBRARY_PATHNAME) {
+            const targetLinks = {
+              activeIndex: -1,
+              links: null,
+              init: (outer) => {
+                targetLinks.links = outer.querySelectorAll(
+                  `a[href^="${SEARCH_PATHNAME}/"]`
+                );
+                if (targetLinks.links.length === 0) {
+                  return;
+                }
+                targetLinks.activeIndex = 0;
+                for (let i = 0; i < targetLinks.links.length; i++) {
+                  if (i === targetLinks.activeIndex) {
+                    targetLinks.links[i].classList.add("search-result-active");
+                  } else {
+                    targetLinks.links[i].classList.remove(
+                      "search-result-active"
+                    );
+                  }
+                }
+                if (targetLinks.activeIndex > 0) {
+                  targetLinks.links[targetLinks.activeIndex].scrollIntoView({
+                    block: "nearest",
+                  });
+                }
+                return targetLinks;
+              },
+            };
+
+            function activeLinkHandler(event) {
+              if (event.isComposing) {
+                return;
+              }
+              if (targetLinks.activeIndex === -1) {
+                return;
+              }
+
+              if (event.code === "Enter") {
+                targetLinks.links[targetLinks.activeIndex].click();
+                return;
+              }
+
+              let loopedNavigation = false;
+              if (event.code === "ArrowUp") {
+                targetLinks.activeIndex =
+                  (targetLinks.activeIndex - 1 + targetLinks.links.length) %
+                  targetLinks.links.length;
+              } else if (event.code === "ArrowDown") {
+                targetLinks.activeIndex =
+                  (targetLinks.activeIndex + 1) % targetLinks.links.length;
+                if (targetLinks.activeIndex === 0) {
+                  loopedNavigation = true;
+                }
+              } else {
+                return;
+              }
+
+              event.preventDefault();
+              targetLinks.links.forEach((link, index) => {
+                if (index === targetLinks.activeIndex) {
+                  link.classList.add("search-result-active");
+                } else {
+                  link.classList.remove("search-result-active");
+                }
+              });
+              // スクロール
+              targetLinks.links[targetLinks.activeIndex].scrollIntoView({
+                block: "nearest",
+              });
+              if (targetLinks.activeIndex === 0) {
+                const scrollContainer = targetLinks.links[
+                  targetLinks.activeIndex
+                ].closest(".scrollable-container");
+                if (scrollContainer) {
+                  if (loopedNavigation) {
+                    scrollContainer.scrollTop = 0;
+                  }
+                }
+              }
+            }
+
+            const inputs = parent.querySelectorAll("input");
+            let targetInput;
+            inputs.forEach((input) => {
+              // パスが /library のときはinput要素にフォーカス
+              // input要素にフォーカスした際に、イベントトリガーを追加
+
+              // 親要素が非表示の場合、何もしない
+              let ele = input;
+              while (ele) {
+                if (window.getComputedStyle(ele).display === "none") {
+                  return;
+                }
+                ele = ele.parentElement;
+              }
+
+              if (input.dataset.focused) {
+                targetInput = input;
+                return;
+              }
+              targetInput = input;
+              targetInput.dataset.focused = "true";
+              targetInput.focus();
+              targetInput.addEventListener("keydown", activeLinkHandler, true);
+
+              if (config.navigation) {
+                let outer;
+                let current = targetInput;
+                while (current) {
+                  if (current.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`)) {
+                    outer = current;
+                    break;
+                  }
+                  current = current.parentElement;
+                }
+                if (!outer) {
+                  return;
+                }
+
+                targetLinks.init(outer);
+
+                // outerに変更があった場合、targetLinksを初期化する
+                const observer = new MutationObserver((mutations) => {
+                  if (location.pathname !== LIBRARY_PATHNAME) {
+                    observer.disconnect();
+                    return;
+                  }
+                  mutations.forEach((mutation) => {
+                    if (mutation.type === "childList") {
+                      // 追加されたノードに検索リンクが含まれている場合のみ初期化する
+                      const hasSearchLinks = Array.from(
+                        mutation.addedNodes
+                      ).some((node) => {
+                        if (node.nodeType !== Node.ELEMENT_NODE) return false;
+                        // 要素自体がリンクか、リンクを含んでいるか確認
+                        return (
+                          (node.tagName === "A" &&
+                            node
+                              .getAttribute("href")
+                              ?.startsWith(`${SEARCH_PATHNAME}/`)) ||
+                          (node.querySelector &&
+                            node.querySelector(
+                              `a[href^="${SEARCH_PATHNAME}/"]`
+                            ))
+                        );
+                      });
+
+                      if (hasSearchLinks) {
+                        targetLinks.init(outer);
+                      }
+                    }
+                  });
+                });
+                observer.observe(outer, {
+                  childList: true,
+                  subtree: true,
+                });
+              }
+
+              return;
+            });
+
+            return;
+          }
+
+          // スペース選択のショートカット
+          if (location.pathname === SPACES_PATHNAME) {
+            if (document.querySelector(".space-selection-active")) {
+              return;
+            }
+
+            const targetItem = document.querySelector(".contents a");
+            if (!targetItem) {
+              return;
+            }
+            targetItem.classList.add("space-selection-active");
+
+            if (document.body.dataset.spacesEventAdded) {
+              return;
+            }
+
+            document.body.dataset.spacesEventAdded = true;
+            document.body.addEventListener(
+              "keydown",
+              (event) => {
+                if (location.pathname !== SPACES_PATHNAME) {
+                  return;
+                }
+                if (event.isComposing) {
+                  return;
+                }
+                if (document.body.querySelector("body > div")) {
+                  // ポップアップが表示されている場合は何もしない
+                  return;
+                }
+
+                const tmp = document.querySelector(".contents a");
+                if (!tmp) {
+                  return;
+                }
+
+                const spacesParent = tmp.parentElement;
+                const items = spacesParent.querySelectorAll("a");
+                let targetItem = spacesParent.querySelector(
+                  "a.space-selection-active"
+                );
+
+                if (event.code === "Enter") {
+                  targetItem.click();
+                  return;
+                }
+
+                if (event.code === "ArrowUp" || event.code === "ArrowLeft") {
+                  event.preventDefault();
+                  targetItem.classList.remove("space-selection-active");
+                  targetItem =
+                    items[
+                      (Array.from(items).indexOf(targetItem) -
+                        1 +
+                        items.length) %
+                        items.length
+                    ];
+                  targetItem.classList.add("space-selection-active");
+                  targetItem.scrollIntoView({ block: "nearest" });
+                } else if (
+                  event.code === "ArrowDown" ||
+                  event.code === "ArrowRight"
+                ) {
+                  event.preventDefault();
+                  targetItem.classList.remove("space-selection-active");
+                  targetItem =
+                    items[
+                      (Array.from(items).indexOf(targetItem) + 1) % items.length
+                    ];
+                  targetItem.classList.add("space-selection-active");
+                  targetItem.scrollIntoView({ block: "nearest" });
+                }
+              },
+              true
+            );
+          }
+
+          const textareas = parent.querySelectorAll(
+            "textarea:not([data-md-textarea])"
+          );
+          textareas.forEach((textarea) => {
+            setTextareaEventListeners(textarea);
+          });
+
+          const copyButtons = parent.querySelectorAll(
+            'button[aria-label="Copy"]'
+          );
+          if (config.simpleCopy && copyButtons.length > 0) {
+            // コピーボタンのツールチップの文言修正
+            const copyTooltip = parent.querySelector('span[role="tooltip"]');
+            let copyTooltipParent;
+            if (copyTooltip) {
+              let current = copyTooltip;
+              while (current) {
+                if (current.matches("div")) {
+                  copyTooltipParent = current;
+                  break;
+                }
+                current = current.parentElement;
+              }
+            }
+            if (copyTooltip && copyTooltip.textContent === "Copy") {
+              copyTooltipParent.querySelectorAll("span").forEach((span) => {
+                if (span.textContent === "Copy") {
+                  span.innerText =
+                    "Click: Simple Copy\nShift+Click: Normal Copy";
+                }
+              });
+            }
+
+            // Citation無しでコピーするイベントリスナーを追加
+            copyButtons.forEach((button) => {
+              if (button.dataset.simpleCopy) {
+                return;
+              }
+              button.dataset.simpleCopy = true;
+
+              button.addEventListener(
+                "click",
+                (event) => {
+                  if (event.shiftKey) {
+                    return;
+                  }
+                  event.stopImmediatePropagation();
+                  simpleCopy(button);
+                },
+                true
+              );
+            });
+          }
+        }
+      });
+    });
+  }
+
   async function main() {
     config = await initConfig();
 
@@ -1189,325 +1500,7 @@
     }, true);
 
     // DOM変更時の対応をする
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            const parent = node.parentElement;
-            if (!parent) {
-              return;
-            }
-
-            // ライブラリページのショートカット
-            if (location.pathname === LIBRARY_PATHNAME) {
-              const targetLinks = {
-                activeIndex: -1,
-                links: null,
-                init: (outer) => {
-                  targetLinks.links = outer.querySelectorAll(
-                    `a[href^="${SEARCH_PATHNAME}/"]`
-                  );
-                  if (targetLinks.links.length === 0) {
-                    return;
-                  }
-                  targetLinks.activeIndex = 0;
-                  for (let i = 0; i < targetLinks.links.length; i++) {
-                    if (i === targetLinks.activeIndex) {
-                      targetLinks.links[i].classList.add(
-                        "search-result-active"
-                      );
-                    } else {
-                      targetLinks.links[i].classList.remove(
-                        "search-result-active"
-                      );
-                    }
-                  }
-                  if (targetLinks.activeIndex > 0) {
-                    targetLinks.links[targetLinks.activeIndex].scrollIntoView({
-                      block: "nearest",
-                    });
-                  }
-                  return targetLinks;
-                },
-              };
-
-              function activeLinkHandler(event) {
-                if (event.isComposing) {
-                  return;
-                }
-                if (targetLinks.activeIndex === -1) {
-                  return;
-                }
-
-                if (event.code === "Enter") {
-                  targetLinks.links[targetLinks.activeIndex].click();
-                  return;
-                }
-
-                let loopedNavigation = false;
-                if (event.code === "ArrowUp") {
-                  targetLinks.activeIndex =
-                    (targetLinks.activeIndex - 1 + targetLinks.links.length) %
-                    targetLinks.links.length;
-                } else if (event.code === "ArrowDown") {
-                  targetLinks.activeIndex =
-                    (targetLinks.activeIndex + 1) % targetLinks.links.length;
-                  if (targetLinks.activeIndex === 0) {
-                    loopedNavigation = true;
-                  }
-                } else {
-                  return;
-                }
-
-                event.preventDefault();
-                targetLinks.links.forEach((link, index) => {
-                  if (index === targetLinks.activeIndex) {
-                    link.classList.add("search-result-active");
-                  } else {
-                    link.classList.remove("search-result-active");
-                  }
-                });
-                // スクロール
-                targetLinks.links[targetLinks.activeIndex].scrollIntoView({
-                  block: "nearest",
-                });
-                if (targetLinks.activeIndex === 0) {
-                  const scrollContainer = targetLinks.links[
-                    targetLinks.activeIndex
-                  ].closest(".scrollable-container");
-                  if (scrollContainer) {
-                    if (loopedNavigation) {
-                      scrollContainer.scrollTop = 0;
-                    }
-                  }
-                }
-              }
-
-              const inputs = parent.querySelectorAll("input");
-              let targetInput;
-              inputs.forEach((input) => {
-                // パスが /library のときはinput要素にフォーカス
-                // input要素にフォーカスした際に、イベントトリガーを追加
-
-                // 親要素が非表示の場合、何もしない
-                let ele = input;
-                while (ele) {
-                  if (window.getComputedStyle(ele).display === "none") {
-                    return;
-                  }
-                  ele = ele.parentElement;
-                }
-
-                if (input.dataset.focused) {
-                  targetInput = input;
-                  return;
-                }
-                targetInput = input;
-                targetInput.dataset.focused = "true";
-                targetInput.focus();
-                targetInput.addEventListener(
-                  "keydown",
-                  activeLinkHandler,
-                  true
-                );
-
-                if (config.navigation) {
-                  let outer;
-                  let current = targetInput;
-                  while (current) {
-                    if (
-                      current.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`)
-                    ) {
-                      outer = current;
-                      break;
-                    }
-                    current = current.parentElement;
-                  }
-                  if (!outer) {
-                    return;
-                  }
-
-                  targetLinks.init(outer);
-
-                  // outerに変更があった場合、targetLinksを初期化する
-                  const observer = new MutationObserver((mutations) => {
-                    if (location.pathname !== LIBRARY_PATHNAME) {
-                      observer.disconnect();
-                      return;
-                    }
-                    mutations.forEach((mutation) => {
-                      if (mutation.type === "childList") {
-                        // 追加されたノードに検索リンクが含まれている場合のみ初期化する
-                        const hasSearchLinks = Array.from(
-                          mutation.addedNodes
-                        ).some((node) => {
-                          if (node.nodeType !== Node.ELEMENT_NODE) return false;
-                          // 要素自体がリンクか、リンクを含んでいるか確認
-                          return (
-                            (node.tagName === "A" &&
-                              node
-                                .getAttribute("href")
-                                ?.startsWith(`${SEARCH_PATHNAME}/`)) ||
-                            (node.querySelector &&
-                              node.querySelector(
-                                `a[href^="${SEARCH_PATHNAME}/"]`
-                              ))
-                          );
-                        });
-
-                        if (hasSearchLinks) {
-                          targetLinks.init(outer);
-                        }
-                      }
-                    });
-                  });
-                  observer.observe(outer, {
-                    childList: true,
-                    subtree: true,
-                  });
-                }
-
-                return;
-              });
-
-              return;
-            }
-
-            // スペース選択のショートカット
-            if (location.pathname === SPACES_PATHNAME) {
-              if (document.querySelector(".space-selection-active")) {
-                return;
-              }
-
-              const targetItem = document.querySelector(".contents a");
-              if (!targetItem) {
-                return;
-              }
-              targetItem.classList.add("space-selection-active");
-
-              if (document.body.dataset.spacesEventAdded) {
-                return;
-              }
-
-              document.body.dataset.spacesEventAdded = true;
-              document.body.addEventListener(
-                "keydown",
-                (event) => {
-                  if (location.pathname !== SPACES_PATHNAME) {
-                    return;
-                  }
-                  if (event.isComposing) {
-                    return;
-                  }
-                  if (document.body.querySelector("body > div")) {
-                    // ポップアップが表示されている場合は何もしない
-                    return;
-                  }
-
-                  const tmp = document.querySelector(".contents a");
-                  if (!tmp) {
-                    return;
-                  }
-
-                  const spacesParent = tmp.parentElement;
-                  const items = spacesParent.querySelectorAll("a");
-                  let targetItem = spacesParent.querySelector(
-                    "a.space-selection-active"
-                  );
-
-                  if (event.code === "Enter") {
-                    targetItem.click();
-                    return;
-                  }
-
-                  if (event.code === "ArrowUp" || event.code === "ArrowLeft") {
-                    event.preventDefault();
-                    targetItem.classList.remove("space-selection-active");
-                    targetItem =
-                      items[
-                        (Array.from(items).indexOf(targetItem) -
-                          1 +
-                          items.length) %
-                          items.length
-                      ];
-                    targetItem.classList.add("space-selection-active");
-                    targetItem.scrollIntoView({ block: "nearest" });
-                  } else if (
-                    event.code === "ArrowDown" ||
-                    event.code === "ArrowRight"
-                  ) {
-                    event.preventDefault();
-                    targetItem.classList.remove("space-selection-active");
-                    targetItem =
-                      items[
-                        (Array.from(items).indexOf(targetItem) + 1) %
-                          items.length
-                      ];
-                    targetItem.classList.add("space-selection-active");
-                    targetItem.scrollIntoView({ block: "nearest" });
-                  }
-                },
-                true
-              );
-            }
-
-            const textareas = parent.querySelectorAll(
-              "textarea:not([data-md-textarea])"
-            );
-            textareas.forEach((textarea) => {
-              setTextareaEventListeners(textarea);
-            });
-
-            const copyButtons = parent.querySelectorAll(
-              'button[aria-label="Copy"]'
-            );
-            if (config.simpleCopy && copyButtons.length > 0) {
-              // コピーボタンのツールチップの文言修正
-              const copyTooltip = parent.querySelector('span[role="tooltip"]');
-              let copyTooltipParent;
-              if (copyTooltip) {
-                let current = copyTooltip;
-                while (current) {
-                  if (current.matches("div")) {
-                    copyTooltipParent = current;
-                    break;
-                  }
-                  current = current.parentElement;
-                }
-              }
-              if (copyTooltip && copyTooltip.textContent === "Copy") {
-                copyTooltipParent.querySelectorAll("span").forEach((span) => {
-                  if (span.textContent === "Copy") {
-                    span.innerText =
-                      "Click: Simple Copy\nShift+Click: Normal Copy";
-                  }
-                });
-              }
-
-              // Citation無しでコピーするイベントリスナーを追加
-              copyButtons.forEach((button) => {
-                if (button.dataset.simpleCopy) {
-                  return;
-                }
-                button.dataset.simpleCopy = true;
-
-                button.addEventListener(
-                  "click",
-                  (event) => {
-                    if (event.shiftKey) {
-                      return;
-                    }
-                    event.stopImmediatePropagation();
-                    simpleCopy(button);
-                  },
-                  true
-                );
-              });
-            }
-          }
-        });
-      });
-    });
+    const observer = new MutationObserver(mainObserver);
     observer.observe(document.body, {
       childList: true,
       subtree: true,
