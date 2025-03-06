@@ -209,7 +209,6 @@
       item.addEventListener(
         "focus",
         (event) => {
-          event.target.classList.add("sidebar-focus");
           leftSidebarState.isFocused = true;
           leftSidebarState.focusIndex = index;
         },
@@ -226,7 +225,9 @@
       );
     });
 
+    // HACK: focus イベント内で sidebar-focus クラスを追加するとマウスクリックでも反応してしまうので、個別に追加する
     leftSidebarItems[0].focus();
+    leftSidebarItems[0].classList.add("sidebar-focus");
   }
 
   function selectLeftSidebarItem(event) {
@@ -251,15 +252,21 @@
     }
     if (event.code === "ArrowDown") {
       leftSidebarState.items[focusIndex].blur();
-      leftSidebarState.items[
-        (focusIndex + 1) % leftSidebarState.items.length
-      ].focus();
+      const nextItem =
+        leftSidebarState.items[
+          (focusIndex + 1) % leftSidebarState.items.length
+        ];
+      nextItem.focus();
+      nextItem.classList.add("sidebar-focus");
     } else if (event.code === "ArrowUp") {
       leftSidebarState.items[focusIndex].blur();
-      leftSidebarState.items[
-        (focusIndex - 1 + leftSidebarState.items.length) %
-          leftSidebarState.items.length
-      ].focus();
+      const nextItem =
+        leftSidebarState.items[
+          (focusIndex - 1 + leftSidebarState.items.length) %
+            leftSidebarState.items.length
+        ];
+      nextItem.focus();
+      nextItem.classList.add("sidebar-focus");
     }
   }
 
