@@ -7,8 +7,11 @@ This Chrome extension adds the following features to make Perplexity a little mo
 
 Navigation:
 
+- `Ctrl(Cmd) + B`: Focus sidebar
 - `Ctrl(Cmd) + K`: Navigate to "/library"
+- `Ctrl(Cmd) + Shift + K`: Navigate to "/spaces"
 - `Up/Down & Enter on "/library" search box`: Navigate through search results
+- `Up/Down/Left/Right & Enter on "/spaces"`: Navigate through spaces
 
 Markdown-editor-like operations:
 
