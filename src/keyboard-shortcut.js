@@ -238,21 +238,25 @@
     if (event.isComposing) {
       return;
     }
-    event.preventDefault();
-    event.stopImmediatePropagation();
     const focusIndex = leftSidebarState.focusIndex;
     if (
       event.code === "Escape" ||
       (ctrlOrMetaKey(event) && event.code === "KeyB")
     ) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
       leftSidebarState.items[focusIndex].blur();
     }
     if (event.code === "Enter") {
+      event.preventDefault();
+      event.stopImmediatePropagation();
       leftSidebarState.items[focusIndex].click();
       leftSidebarState.items[focusIndex].blur();
       return;
     }
     if (event.code === "ArrowDown") {
+      event.preventDefault();
+      event.stopImmediatePropagation();
       leftSidebarState.items[focusIndex].blur();
       const nextItem =
         leftSidebarState.items[
@@ -261,6 +265,8 @@
       nextItem.focus();
       nextItem.classList.add("sidebar-focus");
     } else if (event.code === "ArrowUp") {
+      event.preventDefault();
+      event.stopImmediatePropagation();
       leftSidebarState.items[focusIndex].blur();
       const nextItem =
         leftSidebarState.items[
