@@ -155,7 +155,7 @@
       }
     }
     // Ctrl+B でレフトサイドバーにフォーカス
-    if (ctrlOrMetaKey(event) && event.key === "b") {
+    if (ctrlOrMetaKey(event) && event.code === "KeyB") {
       event.preventDefault();
       focusLeftSidebar();
       return;
