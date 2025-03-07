@@ -84,20 +84,35 @@
     if (event.isComposing) {
       return;
     }
-    if (ctrlOrMetaKey(event) && event.code === "ArrowUp") {
+    if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "ArrowUp") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectModel(UP);
+      selectSearchMode(UP);
+      return;
     }
-    if (ctrlOrMetaKey(event) && event.code === "ArrowDown") {
+    if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "ArrowDown") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectModel(DOWN);
+      selectSearchMode(DOWN);
+      return;
+    }
+    if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowUp") {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      selectSearchMode(UP, 1);
+      return;
+    }
+    if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowDown") {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      selectSearchMode(DOWN, 1);
+      return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "Period") {
       event.preventDefault();
       event.stopImmediatePropagation();
       toggleWebInSearchSource();
+      return;
     }
   }
 
@@ -299,21 +314,21 @@
     },
   };
 
-  async function selectModel(upOrDown) {
+  async function selectSearchMode(upOrDown, buttonIndex = 0) {
     // textarea がアクティブな場合、カーソル位置を取得
     const isTextareaActive = document.activeElement.tagName === "TEXTAREA";
     if (isTextareaActive) {
       textareaSelectionManager.setPosWhenTextareaActive();
     }
 
-    let button = document.querySelector(QUICK_SEARCH_MODAL_SELECTOR);
-    if (!button) {
-      // textareaの2つ上のdivを取得して、その下から検索する
-      const mainSearchBox = document.querySelector("main textarea");
-      if (mainSearchBox) {
-        button = mainSearchBox.parentElement.parentElement.querySelector(
-          MAIN_SEARCH_BOX_MODEL_SELECT_SELECTOR
-        );
+    // textarea を囲む span の下から検索する
+    const mainSearchBox = document.querySelector("main textarea");
+    let button;
+    if (mainSearchBox) {
+      const parent = mainSearchBox.closest("span");
+      const buttons = parent.querySelectorAll("button");
+      if (buttons.length > buttonIndex) {
+        button = buttons[buttonIndex];
       }
     }
 
@@ -415,7 +430,6 @@
   }
 
   async function toggleWebInSearchSource() {
-    // textareの2つ上のdivを取得して、その下から検索する
     const mainSearchBox = document.querySelector("main textarea");
     if (!mainSearchBox) {
       return;
@@ -427,10 +441,13 @@
       textareaSelectionManager.setPosWhenTextareaActive();
     }
 
-    const searchSourceButton =
-      mainSearchBox.parentElement.parentElement.querySelector(
-        MAIN_SEARCH_BOX_SEARCH_SOURCE_SELECTOR
-      );
+    const mainSearchBoxParent = mainSearchBox
+      .closest("span")
+      .querySelectorAll("button");
+    let searchSourceButton;
+    if (mainSearchBoxParent.length > 2) {
+      searchSourceButton = mainSearchBoxParent[2];
+    }
     if (!searchSourceButton) {
       return;
     }
@@ -1535,6 +1552,7 @@
             });
           }
 
+          // 追加された textarea 要素へのイベントリスナー
           const textareas = parent.querySelectorAll(
             "textarea:not([data-md-textarea])"
           );
@@ -1542,6 +1560,7 @@
             setTextareaEventListeners(textarea);
           });
 
+          // 追加されたコピーボタンへの処理
           const copyButtons = parent.querySelectorAll(
             'button[aria-label="Copy"]'
           );
