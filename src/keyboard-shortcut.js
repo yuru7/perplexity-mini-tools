@@ -1449,9 +1449,15 @@
                   targetItem.scrollIntoView({ block: "nearest" });
                 } else if (event.code === "ArrowUp") {
                   event.preventDefault();
-                  let index = Array.from(items).indexOf(targetItem) - wrapCount;
+                  const currentIndex = Array.from(items).indexOf(targetItem);
+                  let index = currentIndex - wrapCount;
                   if (index < 0) {
-                    return;
+                    index =
+                      currentIndex +
+                      wrapCount *
+                        Math.floor(
+                          (items.length - (currentIndex + 1)) / wrapCount
+                        );
                   }
                   targetItem.classList.remove("space-selection-active");
                   targetItem = items[index];
@@ -1459,9 +1465,10 @@
                   targetItem.scrollIntoView({ block: "nearest" });
                 } else if (event.code === "ArrowDown") {
                   event.preventDefault();
-                  let index = Array.from(items).indexOf(targetItem) + wrapCount;
+                  const currentIndex = Array.from(items).indexOf(targetItem);
+                  let index = currentIndex + wrapCount;
                   if (index >= items.length) {
-                    return;
+                    index = currentIndex % wrapCount;
                   }
                   targetItem.classList.remove("space-selection-active");
                   targetItem = items[index];
