@@ -1471,6 +1471,14 @@
             scrollableContainer.dataset.spaceDetailEventAdded = true;
 
             scrollableContainer.addEventListener("focus", (event) => {
+              const activeLink = scrollableContainer.querySelector(
+                "a.collection-active"
+              );
+              if (activeLink) {
+                activeLink.focus();
+                return;
+              }
+
               const links = scrollableContainer.querySelectorAll("a");
 
               links.forEach((link, index) => {
@@ -1485,6 +1493,9 @@
 
             scrollableContainer.addEventListener("keydown", (event) => {
               if (event.isComposing) {
+                return;
+              }
+              if (document.activeElement.nodeName !== "A") {
                 return;
               }
 
