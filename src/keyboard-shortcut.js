@@ -446,7 +446,7 @@
       .querySelectorAll("button");
     let searchSourceButton;
     if (mainSearchBoxParent.length > 2) {
-      searchSourceButton = mainSearchBoxParent[2];
+      searchSourceButton = mainSearchBoxParent[mainSearchBoxParent.length - 3];
     }
     if (!searchSourceButton) {
       return;
