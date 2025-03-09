@@ -26,6 +26,106 @@
     focusIndex: -1,
   };
 
+  const libraryLinks = {
+    activeIndex: -1,
+    links: [],
+    init: (outer) => {
+      const beforeLinks = libraryLinks.links;
+      libraryLinks.links = Array.from(
+        outer.querySelectorAll(`a[href^="${SEARCH_PATHNAME}/"]`)
+      );
+
+      if (libraryLinks.links.length === 0) {
+        return;
+      }
+
+      // 自動ページネーションが発動したかの判定
+      let skipIndexInit = false;
+      if (
+        libraryLinks.activeIndex != -1 &&
+        beforeLinks.length <= libraryLinks.links.length
+      ) {
+        let tmp = true;
+        for (let i = 0; i < beforeLinks.length; i++) {
+          if (
+            beforeLinks[i].getAttribute("href") !==
+            libraryLinks.links[i].getAttribute("href")
+          ) {
+            tmp = false;
+            break;
+          }
+        }
+        skipIndexInit = tmp;
+      }
+
+      // ブラウザバックの場合
+      if (
+        libraryLinks.activeIndex != -1 &&
+        beforeLinks.length === libraryLinks.links.length
+      ) {
+        let tmp = true;
+        for (let i = 0; i < libraryLinks.links.length; i++) {
+          if (
+            beforeLinks[i].getAttribute("href") !==
+            libraryLinks.links[i].getAttribute("href")
+          ) {
+            tmp = false;
+            break;
+          }
+        }
+        skipIndexInit = tmp;
+      }
+
+      if (skipIndexInit) {
+        for (let i = 0; i < libraryLinks.links.length; i++) {
+          if (i === libraryLinks.activeIndex) {
+            libraryLinks.links[i].classList.add("search-result-active");
+          } else {
+            libraryLinks.links[i].classList.remove("search-result-active");
+          }
+        }
+        return;
+      }
+
+      // アクティブ項目の初期化
+      const beforeActiveIndex = libraryLinks.activeIndex;
+      libraryLinks.activeIndex = 0;
+      for (let i = 0; i < libraryLinks.links.length; i++) {
+        if (i === 0) {
+          libraryLinks.links[i].classList.add("search-result-active");
+        } else {
+          libraryLinks.links[i].classList.remove("search-result-active");
+        }
+      }
+      if (beforeActiveIndex > 0) {
+        libraryLinks.links[0].scrollIntoView({
+          block: "center",
+        });
+      }
+      return;
+    },
+  };
+
+  const timerManager = {
+    timers: {},
+
+    // 後勝ちタイマー
+    debounce(id, delay, func) {
+      // 既存のタイマーがあればキャンセル
+      if (this.timers[id]) {
+        clearTimeout(this.timers[id]);
+      }
+
+      // 新しいタイマーを設定
+      this.timers[id] = setTimeout(() => {
+        func();
+        delete this.timers[id]; // 実行後にクリーンアップ
+      }, delay);
+
+      return this.timers[id];
+    },
+  };
+
   async function initConfig() {
     // 設定読み込み
     const config = {};
@@ -1229,81 +1329,65 @@
 
           // ライブラリページのショートカット
           if (location.pathname === LIBRARY_PATHNAME) {
-            const targetLinks = {
-              activeIndex: -1,
-              links: null,
-              init: (outer) => {
-                targetLinks.links = outer.querySelectorAll(
-                  `a[href^="${SEARCH_PATHNAME}/"]`
-                );
-                if (targetLinks.links.length === 0) {
-                  return;
-                }
-                targetLinks.activeIndex = 0;
-                for (let i = 0; i < targetLinks.links.length; i++) {
-                  if (i === targetLinks.activeIndex) {
-                    targetLinks.links[i].classList.add("search-result-active");
-                  } else {
-                    targetLinks.links[i].classList.remove(
-                      "search-result-active"
-                    );
-                  }
-                }
-                if (targetLinks.activeIndex > 0) {
-                  targetLinks.links[targetLinks.activeIndex].scrollIntoView({
-                    block: "nearest",
-                  });
-                }
-                return targetLinks;
-              },
-            };
-
-            function activeLinkHandler(event) {
+            function activeLinkHandler(event, scrollCenter = false) {
               if (event.isComposing) {
                 return;
               }
-              if (targetLinks.activeIndex === -1) {
+              if (libraryLinks.activeIndex === -1) {
                 return;
               }
 
               if (event.code === "Enter") {
-                targetLinks.links[targetLinks.activeIndex].click();
+                libraryLinks.links[libraryLinks.activeIndex].click();
                 return;
               }
 
-              let loopedNavigation = false;
-              if (event.code === "ArrowUp") {
-                targetLinks.activeIndex =
-                  (targetLinks.activeIndex - 1 + targetLinks.links.length) %
-                  targetLinks.links.length;
-              } else if (event.code === "ArrowDown") {
-                targetLinks.activeIndex =
-                  (targetLinks.activeIndex + 1) % targetLinks.links.length;
-                if (targetLinks.activeIndex === 0) {
-                  loopedNavigation = true;
+              if (["ArrowUp", "ArrowDown"].includes(event.code)) {
+                event.preventDefault();
+                const currentLink =
+                  libraryLinks.links[libraryLinks.activeIndex];
+                if (currentLink) {
+                  currentLink.classList.remove("search-result-active");
+                  currentLink.removeAttribute("data-page-end");
                 }
-              } else {
-                return;
-              }
 
-              event.preventDefault();
-              targetLinks.links.forEach((link, index) => {
-                if (index === targetLinks.activeIndex) {
-                  link.classList.add("search-result-active");
+                if (event.code === "ArrowUp") {
+                  libraryLinks.activeIndex =
+                    libraryLinks.activeIndex > 0
+                      ? libraryLinks.activeIndex - 1
+                      : libraryLinks.activeIndex;
+                } else if (event.code === "ArrowDown") {
+                  libraryLinks.activeIndex =
+                    libraryLinks.activeIndex < libraryLinks.links.length - 1
+                      ? libraryLinks.activeIndex + 1
+                      : libraryLinks.activeIndex;
+                }
+
+                const nextLink = libraryLinks.links[libraryLinks.activeIndex];
+
+                nextLink.classList.add("search-result-active");
+
+                // スクロール
+                if (scrollCenter) {
+                  nextLink.scrollIntoView({
+                    block: "center",
+                  });
                 } else {
-                  link.classList.remove("search-result-active");
+                  nextLink.scrollIntoView({
+                    block: "nearest",
+                  });
                 }
-              });
-              // スクロール
-              targetLinks.links[targetLinks.activeIndex].scrollIntoView({
-                block: "nearest",
-              });
-              if (targetLinks.activeIndex === 0) {
-                const scrollContainer = targetLinks.links[
-                  targetLinks.activeIndex
+                const scrollContainer = libraryLinks.links[
+                  libraryLinks.activeIndex
                 ].closest(".scrollable-container");
                 if (scrollContainer) {
-                  if (loopedNavigation) {
+                  if (
+                    libraryLinks.activeIndex ===
+                    libraryLinks.links.length - 1
+                  ) {
+                    scrollContainer.scrollTop = scrollContainer.scrollHeight;
+                    nextLink.dataset.pageEnd = true;
+                  } else if (libraryLinks.activeIndex === 0) {
                     scrollContainer.scrollTop = 0;
                   }
                 }
@@ -1311,84 +1395,87 @@
             }
 
             const inputs = parent.querySelectorAll("input");
-            let targetInput;
             inputs.forEach((input) => {
-              // パスが /library のときはinput要素にフォーカス
               // input要素にフォーカスした際に、イベントトリガーを追加
 
-              // 親要素が非表示の場合、何もしない
+              // 親要素が非表示の場合
+              let doNotFocus = false;
               let ele = input;
               while (ele) {
                 if (window.getComputedStyle(ele).display === "none") {
-                  return;
+                  doNotFocus = true;
                 }
                 ele = ele.parentElement;
               }
 
-              if (input.dataset.focused) {
-                targetInput = input;
+              if (!doNotFocus && document.activeElement !== input) {
+                input.focus();
+              }
+
+              // ナビゲーションが無効の場合、イベントハンドラーの設定はしない
+              if (!config.navigation) {
                 return;
               }
-              targetInput = input;
-              targetInput.dataset.focused = "true";
-              targetInput.focus();
-              targetInput.addEventListener("keydown", activeLinkHandler, true);
 
-              if (config.navigation) {
-                let outer;
-                let current = targetInput;
-                while (current) {
-                  if (current.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`)) {
-                    outer = current;
-                    break;
-                  }
-                  current = current.parentElement;
+              if (input.dataset.searchEventAdded) {
+                return;
+              }
+
+              if (input.closest(".md\\:hidden")) {
+                input.addEventListener(
+                  "keydown",
+                  (event) => {
+                    activeLinkHandler(event, true);
+                  },
+                  true
+                );
+              } else {
+                input.addEventListener("keydown", activeLinkHandler, true);
+              }
+              input.dataset.searchEventAdded = true;
+
+              let outer;
+              let current = input;
+              while (current) {
+                if (current.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`)) {
+                  outer = current;
+                  break;
                 }
-                if (!outer) {
+                current = current.parentElement;
+              }
+              if (!outer) {
+                return;
+              }
+
+              libraryLinks.init(outer);
+
+              // outerに変更があった場合、targetLinksを初期化する
+              const observer = new MutationObserver(async (mutations) => {
+                if (location.pathname !== LIBRARY_PATHNAME) {
+                  observer.disconnect();
                   return;
                 }
 
-                targetLinks.init(outer);
-
-                // outerに変更があった場合、targetLinksを初期化する
-                const observer = new MutationObserver((mutations) => {
-                  if (location.pathname !== LIBRARY_PATHNAME) {
-                    observer.disconnect();
-                    return;
+                mutations.forEach((mutation) => {
+                  if (mutation.type === "childList") {
+                    timerManager.debounce("searchLinks", 50, () => {
+                      // if (outer.querySelector('a[data-page-end="true"]')) {
+                      //   targetLinks.init(outer, true);
+                      // } else {
+                      //   targetLinks.init(outer, false);
+                      // }
+                      libraryLinks.init(outer);
+                    });
                   }
-                  mutations.forEach((mutation) => {
-                    if (mutation.type === "childList") {
-                      // 追加されたノードに検索リンクが含まれている場合のみ初期化する
-                      const hasSearchLinks = Array.from(
-                        mutation.addedNodes
-                      ).some((node) => {
-                        if (node.nodeType !== Node.ELEMENT_NODE) return false;
-                        // 要素自体がリンクか、リンクを含んでいるか確認
-                        return (
-                          (node.tagName === "A" &&
-                            node
-                              .getAttribute("href")
-                              ?.startsWith(`${SEARCH_PATHNAME}/`)) ||
-                          (node.querySelector &&
-                            node.querySelector(
-                              `a[href^="${SEARCH_PATHNAME}/"]`
-                            ))
-                        );
-                      });
-
-                      if (hasSearchLinks) {
-                        targetLinks.init(outer);
-                      }
-                    }
-                  });
                 });
-                observer.observe(outer, {
-                  childList: true,
-                  subtree: true,
-                });
-              }
+              });
+              observer.observe(outer, {
+                childList: true,
+                subtree: true,
+                characterData: true,
+              });
 
-              return;
+              // return;
             });
 
             return;
@@ -1396,6 +1483,11 @@
 
           // スペース選択のショートカット
           if (location.pathname === SPACES_PATHNAME) {
+            // ナビゲーションが無効の場合、イベントハンドラーの設定はしない
+            if (!config.navigation) {
+              return;
+            }
+
             if (document.querySelector(".space-selection-active")) {
               return;
             }
