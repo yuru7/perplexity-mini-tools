@@ -1129,7 +1129,7 @@
     // 言語識別子をコードブロックに追加
     turndownService.addRule("codeBlock", {
       filter: "pre",
-      replacement: function (content, node) {
+      replacement: (content, node) => {
         let lang = node.dataset.language;
         if (lang) {
           return "```" + lang + "\n" + content + "```";
@@ -1142,7 +1142,7 @@
       filter: (node) => {
         return node.nodeName === "P" && node.parentNode.nodeName === "LI"; // li > p
       },
-      replacement: function (content) {
+      replacement: (content) => {
         return content;
       },
     });
@@ -1151,10 +1151,39 @@
       filter: (node) => {
         return node.nodeName === "A" && node.textContent === node.href;
       },
-      replacement: function (content) {
+      replacement: (content) => {
         return content;
       },
     });
+    // katex 項目の処理
+    turndownService.addRule("katex", {
+      filter: (node) => {
+        return node.nodeName === "SPAN" && node.classList.contains("katex");
+      },
+      replacement: (content, node) => {
+        const parent = node.parentElement;
+        const annotation = node.querySelector("annotation");
+        let annotationText = "";
+        if (annotation) {
+          annotationText = annotation.textContent.trim();
+        } else {
+          annotationText = content.trim();
+        }
+        if (parent.classList.contains("katex-display")) {
+          return "$$\n" + annotationText + "\n$$";
+        } else {
+          return "$" + annotationText + "$";
+        }
+      },
+    });
+    // 見出し要素内の特定のエスケープを無効化する
+    turndownService.addRule("disableHeadingEscape", {
+      filter: ["h1", "h2", "h3", "h4", "h5", "h6"],
+      replacement: (content) => {
+        return content.replace(/^(\s*[0-9]+)\\. /g, "$1. ");
+      },
+    });
+    // Markdownに変換
     let markdown = turndownService.turndown(response);
     // Markdown文字列にいくつかの整形
     markdown = markdown.replace(/(\s*(-|[0-9]+\.) ) +/g, "$1");
