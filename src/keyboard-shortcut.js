@@ -1180,8 +1180,19 @@
   }
 
   function simpleCopy(button) {
-    const buttonParent = button.parentElement.parentElement.parentElement;
-    const response = buttonParent.children[1].cloneNode(true);
+    // コピーボタンと同ブロックの親要素を取得
+    let textBlock = button;
+    let ele = button.parentElement;
+    while (ele) {
+      const block = ele.querySelector("div:has(>p)");
+      if (block) {
+        textBlock = block;
+        break;
+      }
+      ele = ele.parentElement;
+    }
+
+    const response = textBlock.cloneNode(true);
     // 引用リンクの削除
     response.querySelectorAll("a.citation").forEach((a) => {
       a.remove();
