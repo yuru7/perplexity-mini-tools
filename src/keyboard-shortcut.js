@@ -1538,8 +1538,13 @@
                 let targetItem = spacesParent.querySelector(
                   "a.space-selection-active"
                 );
+                if (!targetItem) {
+                  targetItem = items[0];
+                  targetItem.classList.add("space-selection-active");
+                }
 
                 if (event.code === "Enter") {
+                  event.preventDefault();
                   targetItem.click();
                   return;
                 }
