@@ -399,13 +399,14 @@
     setPosWhenTextareaActive: function () {
       const activeElement = document.activeElement;
       if (activeElement.tagName === "TEXTAREA") {
-        this.pos = activeElement.selectionStart;
+        this.posStart = activeElement.selectionStart;
+        this.posEnd = activeElement.selectionEnd;
         this.textarea = activeElement;
       }
     },
     applyPosToTextarea: function () {
       if (this.textarea) {
-        this.textarea.setSelectionRange(this.pos, this.pos);
+        this.textarea.setSelectionRange(this.posStart, this.posEnd);
       }
     },
     reset: function () {
@@ -452,6 +453,7 @@
             clickModel(node, upOrDown);
             // textarea のカーソル位置を戻す
             if (isTextareaActive) {
+              textareaSelectionManager.textarea.focus();
               textareaSelectionManager.applyPosToTextarea();
               textareaSelectionManager.reset();
             }
