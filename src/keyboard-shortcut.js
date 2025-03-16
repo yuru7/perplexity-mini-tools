@@ -936,168 +936,197 @@
     }
 
     inputPrefix(prefix) {
-      document.execCommand("insertText", false, prefix);
-      this.scrollToCursor();
+      this.modifyTextWithScroll(() => {
+        document.execCommand("insertText", false, prefix);
+      });
     }
 
     removePrefix(line) {
-      const insertText = line;
-      if (MDTextarea.OUTDENT_INDENT_PATTERN.test(insertText)) {
-        // インデントがある場合、インデントを削除
-        this.outdent(line);
-      } else {
-        this.textarea.setSelectionRange(
-          this.currentPos - line.length,
-          this.currentPos
-        );
-        document.execCommand("delete");
-      }
-
-      this.scrollToCursor();
+      this.modifyTextWithScroll(() => {
+        const insertText = line;
+        if (MDTextarea.OUTDENT_INDENT_PATTERN.test(insertText)) {
+          // インデントがある場合、インデントを削除
+          this.outdent(line);
+        } else {
+          this.textarea.setSelectionRange(
+            this.currentPos - line.length,
+            this.currentPos
+          );
+          document.execCommand("delete");
+        }
+      });
     }
 
     indent(line) {
-      // 選択範囲がある場合は選択範囲をインデントする
-      const isSelectionNotEmpty =
-        this.textarea.selectionStart !== this.textarea.selectionEnd;
-      if (isSelectionNotEmpty) {
-        const selectStart = this.getStartOfLine(this.textarea.selectionStart);
-        const selectEnd = this.getEndOfLine(this.textarea.selectionEnd);
-        const selectText = this.textarea.value.substring(
-          selectStart,
-          selectEnd
-        );
-        const selectLines = selectText.split("\n");
-        for (let i = 0; i < selectLines.length; i++) {
-          selectLines[i] = this.indentStr + selectLines[i];
+      this.modifyTextWithScroll(() => {
+        // 選択範囲がある場合は選択範囲をインデントする
+        const isSelectionNotEmpty =
+          this.textarea.selectionStart !== this.textarea.selectionEnd;
+        if (isSelectionNotEmpty) {
+          const selectStart = this.getStartOfLine(this.textarea.selectionStart);
+          const selectEnd = this.getEndOfLine(this.textarea.selectionEnd);
+          const selectText = this.textarea.value.substring(
+            selectStart,
+            selectEnd
+          );
+          const selectLines = selectText.split("\n");
+          for (let i = 0; i < selectLines.length; i++) {
+            selectLines[i] = this.indentStr + selectLines[i];
+          }
+          this.textarea.setSelectionRange(selectStart, selectEnd);
+          document.execCommand("insertText", false, selectLines.join("\n"));
+          this.textarea.setSelectionRange(
+            selectStart,
+            this.textarea.selectionStart
+          );
+          return;
         }
-        this.textarea.setSelectionRange(selectStart, selectEnd);
-        document.execCommand("insertText", false, selectLines.join("\n"));
-        this.textarea.setSelectionRange(
-          selectStart,
-          this.textarea.selectionStart
-        );
-        return;
-      }
 
-      const start = this.getStartOfLine(this.currentPos);
-      if (MDTextarea.ORDERED_LIST_PATTERN.test(line)) {
-        // 番号付きリストの場合、数字をリセットする
-        const orderedListSymbol = line.match(
-          MDTextarea.ORDERED_LIST_PATTERN
-        )[0];
-        const nextIndent =
-          this.indentStr + (line.match(MDTextarea.INDENT_PATTERN) || [""])[0];
-        const nextNum = this.getNextOrderedNumber(start, nextIndent);
-        const nextNumStr = `${nextIndent}${nextNum}. `;
-        this.textarea.setSelectionRange(
-          start,
-          start + orderedListSymbol.length
-        );
-        document.execCommand("insertText", false, nextNumStr);
-        const lengthDiff = nextNumStr.length - orderedListSymbol.length;
-        this.textarea.selectionStart = this.textarea.selectionEnd =
-          this.currentPos + lengthDiff;
-        // 次行以降の番号を振り直す
-        this.autoNumbering(this.textarea.selectionStart);
-      } else {
-        this.textarea.selectionStart = this.textarea.selectionEnd = start;
-        document.execCommand("insertText", false, this.indentStr);
-        this.textarea.selectionStart = this.textarea.selectionEnd =
-          this.currentPos + this.indentStr.length;
-      }
-
-      this.scrollToCursor();
+        const start = this.getStartOfLine(this.currentPos);
+        if (MDTextarea.ORDERED_LIST_PATTERN.test(line)) {
+          // 番号付きリストの場合、数字をリセットする
+          const orderedListSymbol = line.match(
+            MDTextarea.ORDERED_LIST_PATTERN
+          )[0];
+          const nextIndent =
+            this.indentStr + (line.match(MDTextarea.INDENT_PATTERN) || [""])[0];
+          const nextNum = this.getNextOrderedNumber(start, nextIndent);
+          const nextNumStr = `${nextIndent}${nextNum}. `;
+          this.textarea.setSelectionRange(
+            start,
+            start + orderedListSymbol.length
+          );
+          document.execCommand("insertText", false, nextNumStr);
+          const lengthDiff = nextNumStr.length - orderedListSymbol.length;
+          this.textarea.selectionStart = this.textarea.selectionEnd =
+            this.currentPos + lengthDiff;
+          // 次行以降の番号を振り直す
+          this.autoNumbering(this.textarea.selectionStart);
+        } else {
+          this.textarea.selectionStart = this.textarea.selectionEnd = start;
+          document.execCommand("insertText", false, this.indentStr);
+          this.textarea.selectionStart = this.textarea.selectionEnd =
+            this.currentPos + this.indentStr.length;
+        }
+      });
     }
 
     outdent(line) {
-      // 選択範囲がある場合は選択範囲をアウトデントする
-      const isSelectionNotEmpty =
-        this.textarea.selectionStart !== this.textarea.selectionEnd;
-      if (isSelectionNotEmpty) {
-        const selectStart = this.getStartOfLine(this.textarea.selectionStart);
-        const selectEnd = this.getEndOfLine(this.textarea.selectionEnd);
-        const selectText = this.textarea.value.substring(
-          selectStart,
-          selectEnd
-        );
-        const selectLines = selectText.split("\n");
-        for (let i = 0; i < selectLines.length; i++) {
-          selectLines[i] = selectLines[i].replace(
-            MDTextarea.OUTDENT_INDENT_PATTERN,
-            ""
+      this.modifyTextWithScroll(() => {
+        // 選択範囲がある場合は選択範囲をアウトデントする
+        const isSelectionNotEmpty =
+          this.textarea.selectionStart !== this.textarea.selectionEnd;
+        if (isSelectionNotEmpty) {
+          const selectStart = this.getStartOfLine(this.textarea.selectionStart);
+          const selectEnd = this.getEndOfLine(this.textarea.selectionEnd);
+          const selectText = this.textarea.value.substring(
+            selectStart,
+            selectEnd
           );
+          const selectLines = selectText.split("\n");
+          for (let i = 0; i < selectLines.length; i++) {
+            selectLines[i] = selectLines[i].replace(
+              MDTextarea.OUTDENT_INDENT_PATTERN,
+              ""
+            );
+          }
+          this.textarea.setSelectionRange(selectStart, selectEnd);
+          document.execCommand("insertText", false, selectLines.join("\n"));
+          this.textarea.setSelectionRange(
+            selectStart,
+            this.textarea.selectionStart
+          );
+          return;
         }
-        this.textarea.setSelectionRange(selectStart, selectEnd);
-        document.execCommand("insertText", false, selectLines.join("\n"));
-        this.textarea.setSelectionRange(
-          selectStart,
-          this.textarea.selectionStart
-        );
-        return;
-      }
 
-      if (!MDTextarea.OUTDENT_INDENT_PATTERN.test(line)) {
-        return;
-      }
+        if (!MDTextarea.OUTDENT_INDENT_PATTERN.test(line)) {
+          return;
+        }
 
-      const isOrderedListItem = MDTextarea.ORDERED_LIST_PATTERN.test(line);
-      if (isOrderedListItem) {
-        // 番号付きリストの場合、数字をリセットする
-        const start = this.getStartOfLine(this.currentPos);
-        const end =
-          start + line.match(MDTextarea.ORDERED_LIST_PATTERN)[0].length;
-        this.textarea.setSelectionRange(start, end);
-        const nextIndent = (line.match(MDTextarea.INDENT_PATTERN) || [
-          "",
-        ])[0].replace(MDTextarea.OUTDENT_INDENT_PATTERN, "");
-        const nextNum = this.getNextOrderedNumber(start, nextIndent);
-        const outdentPrefix = `${nextIndent}${nextNum}. `;
-        document.execCommand("insertText", false, outdentPrefix);
-        const lengthDiff =
-          outdentPrefix.match(MDTextarea.ORDERED_LIST_PATTERN)[2].length -
-          line.match(MDTextarea.ORDERED_LIST_PATTERN)[2].length;
-        this.textarea.selectionStart = this.textarea.selectionEnd =
-          this.currentPos -
-          line.match(MDTextarea.OUTDENT_INDENT_PATTERN)[0].length +
-          lengthDiff;
-        // 次行以降の番号を振り直す
-        this.autoNumbering(this.textarea.selectionStart);
-      } else {
-        // 行頭・行末位置を取得する
-        const indentLength = line.match(MDTextarea.OUTDENT_INDENT_PATTERN)[0]
-          .length;
-        const start = this.getStartOfLine(this.currentPos);
-        const end = start + indentLength;
-
-        this.textarea.setSelectionRange(start, end);
-        document.execCommand("delete");
-
-        if (this.textarea.selectionStart < this.currentPos - indentLength) {
+        const isOrderedListItem = MDTextarea.ORDERED_LIST_PATTERN.test(line);
+        if (isOrderedListItem) {
+          // 番号付きリストの場合、数字をリセットする
+          const start = this.getStartOfLine(this.currentPos);
+          const end =
+            start + line.match(MDTextarea.ORDERED_LIST_PATTERN)[0].length;
+          this.textarea.setSelectionRange(start, end);
+          const nextIndent = (line.match(MDTextarea.INDENT_PATTERN) || [
+            "",
+          ])[0].replace(MDTextarea.OUTDENT_INDENT_PATTERN, "");
+          const nextNum = this.getNextOrderedNumber(start, nextIndent);
+          const outdentPrefix = `${nextIndent}${nextNum}. `;
+          document.execCommand("insertText", false, outdentPrefix);
+          const lengthDiff =
+            outdentPrefix.match(MDTextarea.ORDERED_LIST_PATTERN)[2].length -
+            line.match(MDTextarea.ORDERED_LIST_PATTERN)[2].length;
           this.textarea.selectionStart = this.textarea.selectionEnd =
-            this.currentPos - indentLength;
-        }
-      }
+            this.currentPos -
+            line.match(MDTextarea.OUTDENT_INDENT_PATTERN)[0].length +
+            lengthDiff;
+          // 次行以降の番号を振り直す
+          this.autoNumbering(this.textarea.selectionStart);
+        } else {
+          // 行頭・行末位置を取得する
+          const indentLength = line.match(MDTextarea.OUTDENT_INDENT_PATTERN)[0]
+            .length;
+          const start = this.getStartOfLine(this.currentPos);
+          const end = start + indentLength;
 
-      this.scrollToCursor();
+          this.textarea.setSelectionRange(start, end);
+          document.execCommand("delete");
+
+          if (this.textarea.selectionStart < this.currentPos - indentLength) {
+            this.textarea.selectionStart = this.textarea.selectionEnd =
+              this.currentPos - indentLength;
+          }
+        }
+      });
     }
 
-    // カーソル位置がテキストエリア内に収まっていない場合、スクロールする
-    scrollToCursor() {
-      const cursorPosition = this.textarea.selectionStart;
-      const textBeforeCursor = this.textarea.value.substring(0, cursorPosition);
-      const linesBeforeCursor = textBeforeCursor.split("\n").length;
+    // テキストを変更した後、スクロール位置を調整する
+    modifyTextWithScroll(modifyTextFunc) {
+      modifyTextFunc();
 
-      const scrollTop = this.textarea.scrollTop;
-      const scrollBottom = scrollTop + this.textarea.clientHeight;
-      const targetScrollTop = (linesBeforeCursor - 1) * this.lineHeight;
+      const widthStr = getComputedStyle(this.textarea).width;
+      const heightStr = getComputedStyle(this.textarea).height;
+      const height = parseFloat(heightStr.replace("px", ""));
+      const lineHeight = parseInt(getComputedStyle(this.textarea).lineHeight);
 
-      if (targetScrollTop < scrollTop) {
-        this.textarea.scrollTop = targetScrollTop;
-      }
-      if (targetScrollTop + this.lineHeight > scrollBottom) {
-        this.textarea.scrollTop =
-          targetScrollTop - this.textarea.clientHeight + this.lineHeight;
+      // カーソル位置測定用の clone を作成し、見えないところでスクロールさせてカーソル位置情報を取る
+      const clone = this.textarea.cloneNode(true);
+      clone.style.display = "hidden";
+      clone.style.position = "fixed";
+      clone.style.top = "-9999px";
+      clone.style.left = "-9999px";
+      clone.style.width = widthStr;
+      clone.style.height = heightStr;
+      clone.value = this.textarea.value.substring(
+        0,
+        this.textarea.selectionStart
+      );
+      document.body.appendChild(clone);
+      clone.scrollTop = clone.scrollHeight;
+      const cloneScrollTop = clone.scrollTop;
+      // 要素の高さを1行分とすることで、縦方向のカーソル位置を取得する
+      clone.style.height = `${lineHeight}px`;
+      const cursorHeight = clone.scrollHeight;
+      // カーソル位置計算に利用した clone を削除
+      clone.remove();
+
+      if (this.textarea.scrollTop < cloneScrollTop) {
+        // 下方向にスクロールする場合
+        this.textarea.scrollTop = cloneScrollTop;
+      } else if (
+        this.textarea.scrollTop >
+        cloneScrollTop + height - lineHeight
+      ) {
+        // 上方向にスクロールする場合
+        if (cursorHeight <= height) {
+          // 行頭に近い位置でのスクロールの場合の考慮
+          this.textarea.scrollTop = cursorHeight - lineHeight;
+        } else {
+          this.textarea.scrollTop = cloneScrollTop + height - lineHeight;
+        }
       }
     }
 
