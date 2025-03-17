@@ -1090,7 +1090,7 @@
       const widthStr = getComputedStyle(this.textarea).width;
       const heightStr = getComputedStyle(this.textarea).height;
       const height = parseFloat(heightStr.replace("px", ""));
-      const lineHeight = parseInt(getComputedStyle(this.textarea).lineHeight);
+      const lineHeight = this.getLineHeight();
 
       // カーソル位置測定用の clone を作成し、見えないところでスクロールさせてカーソル位置情報を取る
       const clone = this.textarea.cloneNode(true);
@@ -1109,17 +1109,15 @@
       const cloneScrollTop = clone.scrollTop;
       // 要素の高さを1行分とすることで、縦方向のカーソル位置を取得する
       clone.style.height = `${lineHeight}px`;
-      const cursorHeight = clone.scrollHeight;
+      const cursorHeight =
+        clone.scrollHeight - (clone.scrollHeight % lineHeight);
       // カーソル位置計算に利用した clone を削除
       clone.remove();
 
       if (this.textarea.scrollTop < cloneScrollTop) {
         // 下方向にスクロールする場合
         this.textarea.scrollTop = cloneScrollTop;
-      } else if (
-        this.textarea.scrollTop >
-        cloneScrollTop + height - lineHeight
-      ) {
+      } else if (this.textarea.scrollTop > cursorHeight - lineHeight) {
         // 上方向にスクロールする場合
         if (cursorHeight <= height) {
           // 行頭に近い位置でのスクロールの場合の考慮
@@ -1135,16 +1133,42 @@
         window.getComputedStyle(this.textarea).lineHeight
       );
 
-      // "normal" など数値で返ってこなかった場合は数値に変換
+      // "normal" など数値で返ってこなかった場合は差分で計算
       if (isNaN(lineHeight)) {
-        const lineHeightStr = window.getComputedStyle(this.textarea).lineHeight;
-        const tmpElement = document.createElement("div");
-        tmpElement.style.height = lineHeightStr;
-        tmpElement.style.visibility = "hidden";
-        tmpElement.textContent = "X";
-        document.body.appendChild(tmpElement);
-        lineHeight = tmpElement.clientHeight;
-        document.body.removeChild(tmpElement);
+        // クローン作成
+        const clone = this.textarea.cloneNode(true);
+        clone.style.position = "absolute";
+        clone.style.visibility = "hidden";
+        clone.style.height = "auto"; // 高さを自動に設定
+        clone.style.width = getComputedStyle(this.textarea).width; // 幅を同じに
+        clone.style.padding = getComputedStyle(this.textarea).padding;
+        clone.style.border = getComputedStyle(this.textarea).border;
+        clone.style.fontFamily = getComputedStyle(this.textarea).fontFamily;
+        clone.style.fontSize = getComputedStyle(this.textarea).fontSize;
+        clone.style.height = "1px";
+        document.body.appendChild(clone);
+
+        // 1行の高さを測定
+        clone.value = "X";
+        const singleLineHeight = clone.scrollHeight;
+
+        // 2行の高さを測定
+        clone.value = "X\nX";
+        const doubleLineHeight = clone.scrollHeight;
+
+        // クローンを削除
+        clone.remove();
+
+        // 1行あたりの高さを計算
+        lineHeight = doubleLineHeight - singleLineHeight;
+
+        // 計算結果が0以下の場合はフォールバック
+        if (lineHeight <= 0) {
+          const fontSize = parseFloat(
+            window.getComputedStyle(this.textarea).fontSize
+          );
+          lineHeight = Math.round(fontSize * 1.2); // フォントサイズの1.2倍が一般的
+        }
       }
 
       return lineHeight;
