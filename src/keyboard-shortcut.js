@@ -1189,22 +1189,55 @@
       true
     );
 
+    let scrolling = false;
+    const scrollTarget = textarea.closest(".scrollable-container");
+    if (scrollTarget) {
+      // フォーカスを移したときに光らないようにする
+      scrollTarget.style.outline = "none";
+
+      scrollTarget.addEventListener("keyup", (event) => {
+        if (
+          ["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(event.code)
+        ) {
+          if (scrolling) {
+            scrolling = false;
+            textarea.focus();
+          }
+        }
+      });
+
+      textarea.addEventListener(
+        "keydown",
+        (event) => {
+          if (event.isComposing) {
+            return;
+          }
+          // スクロール移動
+          if (
+            ["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(
+              event.code
+            ) &&
+            textarea.value.length === 0
+          ) {
+            event.stopImmediatePropagation();
+            scrolling = true;
+            scrollTarget.focus();
+          }
+          // Escape押下でスクロール可能なコンテナにフォーカスを移す
+          if (event.code === "Escape") {
+            event.stopImmediatePropagation();
+            scrollTarget.focus();
+          }
+        },
+        true
+      );
+    }
+
     textarea.addEventListener(
       "keydown",
       (event) => {
         if (event.isComposing) {
           return;
-        }
-        // Escape押下でスクロール可能なコンテナにフォーカスを移す
-        if (event.code === "Escape") {
-          event.stopImmediatePropagation();
-          const scrollTarget = document
-            .querySelector("textarea")
-            .closest(".scrollable-container");
-          if (scrollTarget) {
-            scrollTarget.style.outline = "none";
-            scrollTarget.focus();
-          }
         }
         // Ctrl+Enter 送信の設定を考慮する
         if (
