@@ -1375,17 +1375,12 @@
         }
       },
     });
-    // 見出し要素内の特定のエスケープを無効化する
-    turndownService.addRule("disableHeadingEscape", {
-      filter: ["h1", "h2", "h3", "h4", "h5", "h6"],
-      replacement: (content) => {
-        return content.replace(/^(\s*[0-9]+)\\. /g, "$1. ");
-      },
-    });
     // Markdownに変換
     let markdown = turndownService.turndown(response);
     // Markdown文字列にいくつかの整形
-    markdown = markdown.replace(/(\s*(-|[0-9]+\.) ) +/g, "$1");
+    markdown = markdown
+      .replace(/(?:^|\n)(\s*(-|[0-9]+\.) ) +/gm, "$1")
+      .replace(/(?:^|\n)(#+\s+[0-9]+)\\\./gm, "$1.");
     // clipboardにコピー
     navigator.clipboard
       .writeText(markdown)
