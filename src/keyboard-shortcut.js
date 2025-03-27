@@ -1379,8 +1379,8 @@
     let markdown = turndownService.turndown(response);
     // Markdown文字列にいくつかの整形
     markdown = markdown
-      .replace(/(?:^|\n)(\s*(-|[0-9]+\.) ) +/gm, "$1")
-      .replace(/(?:^|\n)(#+\s+[0-9]+)\\\./gm, "$1.");
+      .replace(/(^|\n)(\s*(-|[0-9]+\.) ) +/gm, "$1$2")
+      .replace(/(^|\n)(#+\s+[0-9]+)\\\./gm, "$1$2.");
     // clipboardにコピー
     navigator.clipboard
       .writeText(markdown)
