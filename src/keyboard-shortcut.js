@@ -424,16 +424,31 @@
 
     // textarea を囲む span の下から検索する
     const mainSearchBox = document.querySelector("main textarea");
-    let button;
+    let buttons, button;
     if (mainSearchBox) {
       const parent = mainSearchBox.closest("span");
-      const buttons = parent.querySelectorAll("button");
+      buttons = parent.querySelectorAll("button");
       if (buttons.length > buttonIndex) {
         button = buttons[buttonIndex];
       }
     }
 
     if (!button) {
+      return;
+    }
+
+    // Pro ボタンと DeepResearch ボタンの切り替え動作が指定されている場合
+    if (buttonIndex == 0) {
+      if (buttons[0].classList.contains("text-super")) {
+        buttons[1].click();
+      } else {
+        buttons[0].click();
+      }
+      return;
+    }
+
+    // DeepResearch ボタンがアクティブの場合はモデル選択ボタンが表示されていないので終了
+    if (buttons[1].classList.contains("text-super")) {
       return;
     }
 
