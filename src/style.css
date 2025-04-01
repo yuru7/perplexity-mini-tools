@@ -254,6 +254,20 @@
   background-color: rgba(32, 154, 171, 0.5);
 }
 
+.pplx-mini-tools-tooltip {
+  position: absolute;
+  background-color: #333;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.1s;
+  text-align: center;
+  white-space: nowrap;
+}
+
 /* dark mode */
 @media (prefers-color-scheme: dark) {
   .ks-check-icon {

@@ -199,13 +199,13 @@
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowUp") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(UP, 1);
+      selectSearchMode(UP, 2);
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowDown") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(DOWN, 1);
+      selectSearchMode(DOWN, 2);
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "Period") {
@@ -450,7 +450,11 @@
             if (modelSelectBoxChildren.length === 0) {
               return;
             }
-            clickModel(node, upOrDown);
+            const selectModelName = clickModel(node, upOrDown);
+
+            // 選択されたモデル名を表示
+            showTooltip(selectModelName, mainSearchBox);
+
             // textarea のカーソル位置を戻す
             if (isTextareaActive) {
               textareaSelectionManager.textarea.focus();
@@ -490,45 +494,67 @@
         break;
       }
     }
-    let add = upOrDown === UP ? 0 : 2;
+    let add = upOrDown === UP ? -1 : 1;
     // 先頭・末尾に到達した場合はループする
     if (upOrDown === UP && checkedIndex === 0) {
-      checkedIndex = modelSelectBoxChildren.length;
+      checkedIndex = modelSelectBoxChildren.length - 1;
       add = 0;
     } else if (
       upOrDown === DOWN &&
       checkedIndex === modelSelectBoxChildren.length - 1
     ) {
-      checkedIndex = 1;
+      checkedIndex = 0;
       add = 0;
     }
+
+    const modelName = modelSelectBoxChildren[checkedIndex + add].querySelector(
+      "span"
+    )
+      ? modelSelectBoxChildren[checkedIndex + add].querySelector("span")
+          .textContent
+      : modelSelectBoxChildren[checkedIndex + add].textContent;
+
     // 前後の要素をクリックする
-    const targetItem = node.querySelector(
-      MODEL_SELECT_AREA_ITEM_TARGET_SELECTOR.replace("<N>", checkedIndex + add)
-    );
-    if (targetItem) {
-      targetItem.click();
-    }
+    modelSelectBoxChildren[checkedIndex + add].click();
+
+    return modelName;
   }
 
-  function toggleDisplay(selector = null) {
-    const isStyleNotExists = document.getElementById("hidden-style")
-      ? false
-      : true;
-    if (selector && isStyleNotExists) {
-      const style = document.createElement("style");
-      style.textContent = `
-            ${selector} {
-                display: none;
-            }`;
-      style.id = "hidden-style";
-      document.head.appendChild(style);
-    } else {
-      const style = document.getElementById("hidden-style");
-      if (style) {
-        style.remove();
-      }
+  function showTooltip(message, textarea) {
+    // 既存のツールチップを削除
+    const oldTooltip = document.querySelector(".pplx-mini-tools-tooltip");
+    if (oldTooltip) {
+      oldTooltip.remove();
     }
+
+    // テキストエリア要素の取得
+    const textareaRect = textarea.getBoundingClientRect();
+
+    // ツールチップ要素の作成
+    const tooltip = document.createElement("div");
+    tooltip.className = "pplx-mini-tools-tooltip";
+    tooltip.textContent = message;
+    document.body.appendChild(tooltip);
+
+    // ツールチップの位置設定（テキストエリアの上部中央）
+    const tooltipRect = tooltip.getBoundingClientRect();
+    tooltip.style.left =
+      textareaRect.left + textareaRect.width / 2 - tooltipRect.width / 2 + "px";
+    tooltip.style.top =
+      textareaRect.top - tooltipRect.height - 10 + window.scrollY + "px";
+
+    // ツールチップの表示
+    setTimeout(() => {
+      tooltip.style.opacity = "0.8";
+    }, 10);
+
+    // 2秒後にツールチップを非表示
+    setTimeout(() => {
+      tooltip.style.opacity = "0";
+      setTimeout(() => {
+        tooltip.remove();
+      }, 100);
+    }, 2000);
   }
 
   async function toggleWebInSearchSource() {
