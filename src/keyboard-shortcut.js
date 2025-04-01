@@ -1087,7 +1087,12 @@
     modifyTextWithScroll(modifyTextFunc) {
       modifyTextFunc();
 
+      // 一時的にスクロールバーを非表示にして、幅を取得
+      const originalOverflow = this.textarea.style.overflow;
+      this.textarea.style.overflow = "hidden";
       const widthStr = getComputedStyle(this.textarea).width;
+      this.textarea.style.overflow = originalOverflow;
+
       const heightStr = getComputedStyle(this.textarea).height;
       const height = parseFloat(heightStr.replace("px", ""));
       const lineHeight = this.getLineHeight();
