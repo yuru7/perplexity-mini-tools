@@ -1181,19 +1181,6 @@
   }
 
   function setTextareaEventListeners(textarea) {
-    // Ctrl+V の際にカーソルが末尾にジャンプする不具合を予防
-    // 貼り付け形式がテキストの場合、標準のイベントリスナーには処理をさせない
-    textarea.addEventListener(
-      "paste",
-      (event) => {
-        if (!event.clipboardData.types.includes("text/plain")) {
-          return;
-        }
-        event.stopImmediatePropagation();
-      },
-      true
-    );
-
     let scrolling = false;
     const scrollTarget = textarea.closest(".scrollable-container");
     if (scrollTarget) {
