@@ -797,7 +797,9 @@
         // インデントがある場合
         const indentMatch = currentLine.match(MDTextarea.INDENT_PATTERN);
         if (indentMatch) {
-          this.inputPrefix("\n" + indentMatch[0]);
+          const posOfLine =
+            this.currentPos - this.getStartOfLine(this.currentPos);
+          this.inputPrefix("\n" + indentMatch[0].slice(0, posOfLine));
           return;
         }
 
