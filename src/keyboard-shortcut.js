@@ -199,13 +199,19 @@
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowUp") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(UP, 2);
+      selectSearchMode(
+        UP,
+        2 + (location.pathname.startsWith(SPACE_DETAIL_PATHNAME) ? 1 : 0)
+      );
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowDown") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(DOWN, 2);
+      selectSearchMode(
+        DOWN,
+        2 + (location.pathname.startsWith(SPACE_DETAIL_PATHNAME) ? 1 : 0)
+      );
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "Period") {
@@ -428,9 +434,10 @@
     if (mainSearchBox) {
       const parent = mainSearchBox.closest("span");
       buttons = parent.querySelectorAll("button");
-      if (buttons.length > buttonIndex) {
-        button = buttons[buttonIndex];
-      }
+      button =
+        buttonIndex < 0
+          ? buttons[buttons.length + buttonIndex]
+          : buttons[buttonIndex];
     }
 
     if (!button) {
