@@ -1,5 +1,5 @@
 (async () => {
-  const SELECTOR = "pre code";
+  const SELECTOR = "pre code:not([data-mermaid-processed])";
   const MUTATION_OBSERVER_QUERY_SELECTOR = "code";
   const BACKGROUND_WHITE = "#FFFFFF";
   const BACKGROUND_DARK = "#1E1E1E";
@@ -419,6 +419,12 @@
       return;
     }
     block.dataset.mermaidProcessed = true;
+
+    // 同じブロック内に既にボタンがある場合はスキップ
+    const parentBlock = block.closest("pre").parentNode;
+    if (parentBlock.querySelector(".mermaid-preview-button-wrapper")) {
+      return;
+    }
 
     const codeText = block.textContent.trim();
 
