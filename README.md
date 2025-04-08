@@ -44,7 +44,7 @@ Automatically detects Mermaid diagrams within tags and adds a preview display bu
 
 ```sh
 # Mermaid.js ver: 11.4.1
-curl https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js -o lib/mermaid.min.js
+curl https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.min.js -o lib/mermaid.min.js
 # svg-pan-zoom ver: 3.5.0
 curl https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.2/dist/svg-pan-zoom.min.js -o lib/svg-pan-zoom.min.js
 # turndown.js ver: 7.2.0
