@@ -1648,7 +1648,7 @@
                 if (event.isComposing) {
                   return;
                 }
-                if (document.body.querySelector("body > div")) {
+                if (document.body.querySelector("body > div div.fixed")) {
                   // ポップアップが表示されている場合は何もしない
                   return;
                 }
