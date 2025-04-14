@@ -1237,35 +1237,43 @@
       // フォーカスを移したときに光らないようにする
       scrollTarget.style.outline = "none";
 
-      scrollTarget.addEventListener("keyup", (event) => {
-        if (
-          ["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(event.code)
-        ) {
-          if (scrolling) {
-            scrolling = false;
-            textarea.focus();
+      // 検索結果画面でのみ対応するスクロール用キーフック
+      if (location.pathname.startsWith(SEARCH_PATHNAME)) {
+        scrollTarget.addEventListener("keyup", (event) => {
+          if (["ArrowDown", "ArrowUp"].includes(event.code)) {
+            if (scrolling) {
+              scrolling = false;
+              textarea.focus();
+            }
           }
-        }
-      });
+        });
 
+        textarea.addEventListener(
+          "keydown",
+          (event) => {
+            if (event.isComposing) {
+              return;
+            }
+            // スクロール移動
+            if (
+              ["ArrowDown", "ArrowUp"].includes(event.code) &&
+              textarea.value.length === 0
+            ) {
+              event.stopImmediatePropagation();
+              scrolling = true;
+              scrollTarget.focus();
+            }
+          },
+          true
+        );
+      }
+      // Escape押下でスクロール可能なコンテナにフォーカスを移す
       textarea.addEventListener(
         "keydown",
         (event) => {
           if (event.isComposing) {
             return;
           }
-          // スクロール移動
-          if (
-            ["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(
-              event.code
-            ) &&
-            textarea.value.length === 0
-          ) {
-            event.stopImmediatePropagation();
-            scrolling = true;
-            scrollTarget.focus();
-          }
-          // Escape押下でスクロール可能なコンテナにフォーカスを移す
           if (event.code === "Escape") {
             event.stopImmediatePropagation();
             scrollTarget.focus();
