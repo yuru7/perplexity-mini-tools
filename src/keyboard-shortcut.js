@@ -20,6 +20,9 @@
   const UP = 0;
   const DOWN = 1;
 
+  const MODEL_SELECT_BUTTON_POS = 2;
+  const SEARCH_SOURCE_BUTTON_POS = 3;
+
   const leftSidebarState = {
     isFocused: false,
     items: null,
@@ -199,19 +202,13 @@
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowUp") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(
-        UP,
-        2 + (location.pathname.startsWith(SPACE_DETAIL_PATHNAME) ? 1 : 0)
-      );
+      selectSearchMode(UP, MODEL_SELECT_BUTTON_POS);
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowDown") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(
-        DOWN,
-        2 + (location.pathname.startsWith(SPACE_DETAIL_PATHNAME) ? 1 : 0)
-      );
+      selectSearchMode(DOWN, MODEL_SELECT_BUTTON_POS);
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "Period") {
@@ -422,6 +419,8 @@
   };
 
   async function selectSearchMode(upOrDown, buttonIndex = 0) {
+    // buttonIndex = 0 の場合、「検索」と「リサーチ」の切り替えを行う
+
     // textarea がアクティブな場合、カーソル位置を取得
     const isTextareaActive = document.activeElement.tagName === "TEXTAREA";
     if (isTextareaActive) {
@@ -446,7 +445,7 @@
 
     // Pro ボタンと DeepResearch ボタンの切り替え動作が指定されている場合
     if (buttonIndex == 0) {
-      if (buttons[0].classList.contains("text-super")) {
+      if (buttons[0].dataset.state == "checked") {
         buttons[1].click();
       } else {
         buttons[0].click();
@@ -455,7 +454,7 @@
     }
 
     // DeepResearch ボタンがアクティブの場合はモデル選択ボタンが表示されていないので終了
-    if (buttons[1].classList.contains("text-super")) {
+    if (buttons[1].dataset.state == "checked") {
       return;
     }
 
@@ -595,8 +594,8 @@
       .closest("span")
       .querySelectorAll("button");
     let searchSourceButton;
-    if (mainSearchBoxParent.length > 2) {
-      searchSourceButton = mainSearchBoxParent[mainSearchBoxParent.length - 3];
+    if (mainSearchBoxParent.length > SEARCH_SOURCE_BUTTON_POS) {
+      searchSourceButton = mainSearchBoxParent[SEARCH_SOURCE_BUTTON_POS];
     }
     if (!searchSourceButton) {
       return;
