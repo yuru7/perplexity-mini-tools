@@ -1837,32 +1837,42 @@
             setTextareaEventListeners(textarea);
           });
 
+          const copySvg = parent.querySelectorAll("svg.tabler-icon-copy");
+          const copyButtons = [];
+          copySvg.forEach((svg) => {
+            const button = svg.closest("button");
+            if (!button) {
+              return;
+            }
+            if (button.dataset.simpleCopy) {
+              return;
+            }
+            copyButtons.push(button);
+          });
+
           // 追加されたコピーボタンへの処理
-          const copyButtons = parent.querySelectorAll(
-            'button[aria-label="Copy"]'
-          );
           if (config.simpleCopy && copyButtons.length > 0) {
             // コピーボタンのツールチップの文言修正
-            const copyTooltip = parent.querySelector('span[role="tooltip"]');
-            let copyTooltipParent;
-            if (copyTooltip) {
-              let current = copyTooltip;
-              while (current) {
-                if (current.matches("div")) {
-                  copyTooltipParent = current;
-                  break;
-                }
-                current = current.parentElement;
-              }
-            }
-            if (copyTooltip && copyTooltip.textContent === "Copy") {
-              copyTooltipParent.querySelectorAll("span").forEach((span) => {
-                if (span.textContent === "Copy") {
-                  span.innerText =
-                    "Click: Simple Copy\nShift+Click: Normal Copy";
-                }
-              });
-            }
+            // const copyTooltip = parent.querySelector('span[role="tooltip"]');
+            // let copyTooltipParent;
+            // if (copyTooltip) {
+            //   let current = copyTooltip;
+            //   while (current) {
+            //     if (current.matches("div")) {
+            //       copyTooltipParent = current;
+            //       break;
+            //     }
+            //     current = current.parentElement;
+            //   }
+            // }
+            // if (copyTooltip && copyTooltip.textContent === "Copy") {
+            //   copyTooltipParent.querySelectorAll("span").forEach((span) => {
+            //     if (span.textContent === "Copy") {
+            //       span.innerText =
+            //         "Click: Normal Copy\nShift+Click: Simple Copy";
+            //     }
+            //   });
+            // }
 
             // Citation無しでコピーするイベントリスナーを追加
             copyButtons.forEach((button) => {
@@ -1874,7 +1884,7 @@
               button.addEventListener(
                 "click",
                 (event) => {
-                  if (event.shiftKey) {
+                  if (!event.shiftKey) {
                     return;
                   }
                   event.stopImmediatePropagation();
