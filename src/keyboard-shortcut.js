@@ -418,6 +418,10 @@
     },
   };
 
+  function isDeepResearch(buttons) {
+    return buttons[1].dataset.state === "checked";
+  }
+
   async function selectSearchMode(upOrDown, buttonIndex = 0) {
     // buttonIndex = 0 の場合、「検索」と「リサーチ」の切り替えを行う
 
@@ -445,16 +449,16 @@
 
     // Pro ボタンと DeepResearch ボタンの切り替え動作が指定されている場合
     if (buttonIndex == 0) {
-      if (buttons[0].dataset.state == "checked") {
-        buttons[1].click();
-      } else {
+      if (isDeepResearch(buttons)) {
         buttons[0].click();
+      } else {
+        buttons[1].click();
       }
       return;
     }
 
     // DeepResearch ボタンがアクティブの場合はモデル選択ボタンが表示されていないので終了
-    if (buttons[1].dataset.state == "checked") {
+    if (isDeepResearch(buttons)) {
       return;
     }
 
@@ -590,12 +594,13 @@
       textareaSelectionManager.setPosWhenTextareaActive();
     }
 
-    const mainSearchBoxParent = mainSearchBox
-      .closest("span")
-      .querySelectorAll("button");
+    const buttons = mainSearchBox.closest("span").querySelectorAll("button");
+    const pos = isDeepResearch(buttons)
+      ? SEARCH_SOURCE_BUTTON_POS - 1
+      : SEARCH_SOURCE_BUTTON_POS;
     let searchSourceButton;
-    if (mainSearchBoxParent.length > SEARCH_SOURCE_BUTTON_POS) {
-      searchSourceButton = mainSearchBoxParent[SEARCH_SOURCE_BUTTON_POS];
+    if (buttons.length > pos) {
+      searchSourceButton = buttons[pos];
     }
     if (!searchSourceButton) {
       return;
