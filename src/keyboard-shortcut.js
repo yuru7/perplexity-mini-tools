@@ -233,21 +233,26 @@
         return;
       }
       event.preventDefault();
-      const link = document.querySelector(`a[href="${LIBRARY_PATHNAME}"]`);
-      if (link) {
-        link.click();
-        showLoadingIndicator();
-        // location が変更されたら非表示
-        const observer = new MutationObserver(() => {
-          hideLoadingIndicator();
-          observer.disconnect();
-        });
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true,
-        });
-        return;
-      }
+      // const link = document.querySelector(`a[href="${LIBRARY_PATHNAME}"]`);
+      // if (link) {
+      //   link.click();
+      //   showLoadingIndicator();
+      //   // location が変更されたら非表示
+      //   const observer = new MutationObserver(() => {
+      //     hideLoadingIndicator();
+      //     observer.disconnect();
+      //   });
+      //   observer.observe(document.body, {
+      //     childList: true,
+      //     subtree: true,
+      //   });
+      //   return;
+      // }
+
+      // HACK: ページ構造が変わってしまい、リンクが常に存在するわけではなくなったため直接移動
+      showLoadingIndicator();
+      window.location.href = LIBRARY_PATHNAME;
+
       return;
     }
     // Ctrl+Shift+K でスペースページに移動
