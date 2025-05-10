@@ -1332,13 +1332,11 @@
         dispatchInputEvent();
       });
       textarea.addEventListener("compositionend", (event) => {
-        console.log("compositionend");
         isComposing = false;
         // inputイベントを再発行
         dispatchInputEvent();
       });
       textarea.addEventListener("keydown", (event) => {
-        console.log("keydown", event.code);
         if (isComposing) {
           return;
         }
@@ -1349,13 +1347,12 @@
         }
       });
       textarea.addEventListener("keyup", (event) => {
-        console.log("keyup", event.code);
         if (isComposing) {
           return;
         }
 
         // 特定キーの入力の場合にはinputイベント発行
-        if (event.code === "Space") {
+        if (/^(Space|Backspace|Delete)$/.test(event.code)) {
           // inputイベントを再発行
           dispatchInputEvent();
           return;
