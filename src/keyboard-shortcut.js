@@ -4,7 +4,7 @@
   const MAIN_SEARCH_BOX_MODEL_SELECT_SELECTOR =
     "div.gap-sm.flex > span:nth-child(1) > button";
   const MODEL_SELECT_AREA_ITEM_SELECTOR = "div.group\\/item";
-  const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = "div.pr.super";
+  const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = 'svg[data-icon="check"]';
   const MODEL_SELECT_AREA_ITEM_TARGET_SELECTOR =
     "div.group\\/item:nth-child(<N>)";
 
@@ -522,11 +522,10 @@
       MODEL_SELECT_AREA_ITEM_SELECTOR
     );
     for (let i = 0; i < modelSelectBoxChildren.length; i++) {
-      if (
-        modelSelectBoxChildren[i].querySelector(
-          MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR
-        )
-      ) {
+      const checked = modelSelectBoxChildren[i].querySelector(
+        MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR
+      );
+      if (checked && checked.getAttribute("aria-hidden") === "false") {
         checkedIndex = i;
         break;
       }
