@@ -516,7 +516,6 @@
 
   function clickModel(node, upOrDown) {
     // 何番目の子要素にチェックが入っているかを調べる
-    // チェック位置は子孫にある div.pr.super で判定
     let checkedIndex = -1;
     let modelSelectBoxChildren = node.querySelectorAll(
       MODEL_SELECT_AREA_ITEM_SELECTOR
@@ -1350,13 +1349,6 @@
           return;
         }
 
-        // 特定キーの入力の場合にはinputイベント発行
-        if (/^(Space|Backspace|Delete)$/.test(event.code)) {
-          // inputイベントを再発行
-          dispatchInputEvent();
-          return;
-        }
-
         // 0文字、1文字の際に音声入力ボタンが切り替わることへの対応
         if (textarea.value.length > 0 && isZero) {
           isZero = false;
@@ -1365,6 +1357,9 @@
         } else if (textarea.value.length === 0 && !isZero) {
           isZero = true;
           // inputイベントを再発行
+          dispatchInputEvent();
+        } else if (/^(Space|Backspace|Delete)$/.test(event.code)) {
+          // 特定キーの入力の場合にはinputイベント発行
           dispatchInputEvent();
         }
       });
