@@ -33,7 +33,6 @@
     activeIndex: -1,
     links: [],
     init: (outer) => {
-      console.log("init", outer);
       const beforeLinks = libraryLinks.links;
       libraryLinks.links = Array.from(
         outer.querySelectorAll(`a[href^="${SEARCH_PATHNAME}/"]`)
