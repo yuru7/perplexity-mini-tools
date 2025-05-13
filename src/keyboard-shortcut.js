@@ -1704,6 +1704,33 @@
                 current = current.parentElement;
               }
 
+              const setObserver = () => {
+                // outerに変更があった場合、targetLinksを初期化する
+                const observer = new MutationObserver(async (mutations) => {
+                  if (location.pathname !== LIBRARY_PATHNAME) {
+                    observer.disconnect();
+                    return;
+                  }
+
+                  if (!outer) {
+                    return;
+                  }
+
+                  mutations.forEach((mutation) => {
+                    if (mutation.type === "childList") {
+                      timerManager.debounce("searchLinks", 50, () => {
+                        libraryLinks.init(outer);
+                      });
+                    }
+                  });
+                });
+                observer.observe(outer, {
+                  childList: true,
+                  subtree: true,
+                  characterData: true,
+                });
+              };
+
               if (!outer) {
                 // 親要素が見つからない場合、MutationObserverを使用して監視する
                 const observer = new MutationObserver(async (mutations) => {
@@ -1712,7 +1739,6 @@
                     return;
                   }
 
-                  let outer;
                   let current = input;
                   while (current) {
                     if (isOuter(current)) {
@@ -1726,6 +1752,7 @@
                     return;
                   }
                   libraryLinks.init(outer);
+                  setObserver();
                   observer.disconnect();
                 });
                 observer.observe(document.body, {
@@ -1735,37 +1762,10 @@
                 });
 
                 return;
+              } else {
+                libraryLinks.init(outer);
+                setObserver();
               }
-
-              libraryLinks.init(outer);
-
-              // outerに変更があった場合、targetLinksを初期化する
-              const observer = new MutationObserver(async (mutations) => {
-                if (location.pathname !== LIBRARY_PATHNAME) {
-                  observer.disconnect();
-                  return;
-                }
-
-                mutations.forEach((mutation) => {
-                  if (mutation.type === "childList") {
-                    timerManager.debounce("searchLinks", 50, () => {
-                      // if (outer.querySelector('a[data-page-end="true"]')) {
-                      //   targetLinks.init(outer, true);
-                      // } else {
-                      //   targetLinks.init(outer, false);
-                      // }
-                      libraryLinks.init(outer);
-                    });
-                  }
-                });
-              });
-              observer.observe(outer, {
-                childList: true,
-                subtree: true,
-                characterData: true,
-              });
-
-              // return;
             });
 
             return;
