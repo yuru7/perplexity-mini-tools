@@ -33,6 +33,7 @@
     activeIndex: -1,
     links: [],
     init: (outer) => {
+      console.log("init", outer);
       const beforeLinks = libraryLinks.links;
       libraryLinks.links = Array.from(
         outer.querySelectorAll(`a[href^="${SEARCH_PATHNAME}/"]`)
@@ -240,25 +241,26 @@
         return;
       }
       event.preventDefault();
-      // const link = document.querySelector(`a[href="${LIBRARY_PATHNAME}"]`);
-      // if (link) {
-      //   link.click();
-      //   showLoadingIndicator();
-      //   // location が変更されたら非表示
-      //   const observer = new MutationObserver(() => {
-      //     hideLoadingIndicator();
-      //     observer.disconnect();
-      //   });
-      //   observer.observe(document.body, {
-      //     childList: true,
-      //     subtree: true,
-      //   });
-      //   return;
-      // }
 
-      // HACK: ページ構造が変わってしまい、リンクが常に存在するわけではなくなったため直接移動
       showLoadingIndicator();
-      window.location.href = LIBRARY_PATHNAME;
+
+      const link = document.querySelector(`a[href="${LIBRARY_PATHNAME}"]`);
+      if (link) {
+        link.click();
+        // location が変更されたら非表示
+        const observer = new MutationObserver(() => {
+          hideLoadingIndicator();
+          observer.disconnect();
+        });
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+        });
+        return;
+      } else {
+        // HACK: ページ構造が変わってしまい、リンクが常に存在するわけではなくなったため直接移動も考慮
+        window.location.href = LIBRARY_PATHNAME;
+      }
 
       return;
     }
@@ -1327,13 +1329,17 @@
         });
         textarea.dispatchEvent(inputEvent);
       };
-      textarea.addEventListener("beforeinput", (event) => {
-        if (endComposing) {
-          endComposing = false;
-          eventReflected = true;
-          return;
-        }
-      }, true);
+      textarea.addEventListener(
+        "beforeinput",
+        (event) => {
+          if (endComposing) {
+            endComposing = false;
+            eventReflected = true;
+            return;
+          }
+        },
+        true
+      );
       textarea.addEventListener(
         "input",
         (event) => {
@@ -1682,16 +1688,53 @@
               }
               input.dataset.searchEventAdded = true;
 
+              const isOuter = (current) => {
+                return (
+                  current.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`) &&
+                  current.classList.contains("w-full")
+                );
+              };
+
               let outer;
               let current = input;
               while (current) {
-                if (current.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`)) {
+                if (isOuter(current)) {
                   outer = current;
                   break;
                 }
                 current = current.parentElement;
               }
+
               if (!outer) {
+                // 親要素が見つからない場合、MutationObserverを使用して監視する
+                const observer = new MutationObserver(async (mutations) => {
+                  if (location.pathname !== LIBRARY_PATHNAME) {
+                    observer.disconnect();
+                    return;
+                  }
+
+                  let outer;
+                  let current = input;
+                  while (current) {
+                    if (isOuter(current)) {
+                      outer = current;
+                      break;
+                    }
+                    current = current.parentElement;
+                  }
+
+                  if (!outer) {
+                    return;
+                  }
+                  libraryLinks.init(outer);
+                  observer.disconnect();
+                });
+                observer.observe(document.body, {
+                  childList: true,
+                  subtree: true,
+                  characterData: true,
+                });
+
                 return;
               }
 
