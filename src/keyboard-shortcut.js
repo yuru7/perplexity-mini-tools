@@ -269,10 +269,10 @@
       if (location.pathname === SPACES_PATHNAME) {
         return;
       }
+      showLoadingIndicator();
       const link = document.querySelector(`a[href="${SPACES_PATHNAME}"]`);
       if (link) {
         link.click();
-        showLoadingIndicator();
         // location が変更されたら非表示
         const observer = new MutationObserver(() => {
           hideLoadingIndicator();
@@ -283,6 +283,9 @@
           subtree: true,
         });
         return;
+      } else {
+        // HACK: ページ構造が変わってしまい、リンクが常に存在するわけではなくなったため直接移動も考慮
+        window.location.href = SPACES_PATHNAME;
       }
     }
     // Ctrl+B でレフトサイドバーにフォーカス
