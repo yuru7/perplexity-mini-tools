@@ -13,6 +13,7 @@
   "permissions": [
     "activeTab",
     "clipboardWrite",
+    "clipboardRead",
     "storage"
   ],
   "host_permissions": [

@@ -268,6 +268,15 @@
   white-space: nowrap;
 }
 
+.simple-copy-success {
+  /* 円で囲む */
+  background-color: rgba(41, 225, 176, 0.18) !important;
+}
+
+.simple-copy-success:hover {
+  background-color: rgba(41, 225, 176, 0.36) !important;
+}
+
 /* dark mode */
 @media (prefers-color-scheme: dark) {
   .ks-check-icon {

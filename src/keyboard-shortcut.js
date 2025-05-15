@@ -1942,17 +1942,62 @@
               }
               button.dataset.simpleCopy = true;
 
-              button.addEventListener(
-                "click",
-                (event) => {
-                  if (!event.shiftKey) {
-                    return;
-                  }
-                  event.stopImmediatePropagation();
-                  simpleCopy(button);
-                },
-                true
-              );
+              // TODO: 一時的に切り替え。問題なく動きそうなら simpleCopy() ごと処理を削除する
+              // button.addEventListener(
+              //   "click",
+              //   (event) => {
+              //     if (!event.shiftKey) {
+              //       return;
+              //     }
+              //     event.stopImmediatePropagation();
+              //     simpleCopy(button);
+              //   },
+              //   true
+              // );
+              button.addEventListener("click", async (event) => {
+                if (!event.shiftKey) {
+                  return;
+                }
+                await sleep(100);
+                const clipText = await navigator.clipboard.readText();
+                const cleanedText = clipText
+                  .replace(
+                    /(\r?\nCitations:\r?\n\[1\][\s\S]+)?---\r?\n[^\r\n]+$/,
+                    ""
+                  )
+                  .replace(/\[[0-9]+\]/g, "")
+                  .trim();
+                // clipboardにコピー
+                navigator.clipboard
+                  .writeText(cleanedText)
+                  .then(() => {
+                    // コピー成功時の処理
+                    // // ボタンの内容を一時的に保存
+                    // const originalDiv = button.children[0];
+                    // // ボタンをチェックマークに変更
+                    // const icon = document.createElement("img");
+                    // icon.src = chrome.runtime.getURL("assets/clip-check.png");
+                    // icon.width = 16;
+                    // icon.height = 16;
+                    // icon.classList.add("ks-check-icon");
+                    // const newDiv = document.createElement("div");
+                    // newDiv.appendChild(icon);
+                    // button.children[0].replaceWith(newDiv);
+                    // // 元に戻す
+                    // setTimeout(() => {
+                    //   newDiv.replaceWith(originalDiv);
+                    // }, 2000);
+                    button.classList.add("simple-copy-success");
+                    setTimeout(() => {
+                      button.classList.remove("simple-copy-success");
+                    }, 2000);
+
+                  })
+                  .finally(() => {
+                    // buttonからフォーカスを外す
+                    button.blur();
+                  });
+              });
             });
           }
         }
