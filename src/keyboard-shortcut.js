@@ -138,7 +138,6 @@
           "markdownEditorLike",
           "searchOption",
           "simpleCopy",
-          "fixInputLag",
           "ctrlEnter",
           "navigation",
         ],
@@ -165,12 +164,6 @@
             config.simpleCopy = true;
           } else {
             config.simpleCopy = data.simpleCopy;
-          }
-
-          if (data.fixInputLag === undefined) {
-            config.fixInputLag = false;
-          } else {
-            config.fixInputLag = data.fixInputLag;
           }
 
           if (data.navigation === undefined) {
@@ -1312,87 +1305,6 @@
         },
         true
       );
-    }
-
-    // HACK: 文字入力でPerplexityが大きく遅延するため、文字入力イベントをスルーさせる
-    if (config.fixInputLag) {
-      let eventReflected = false;
-      let isZero = true;
-      let isComposing = false;
-      let endComposing = false;
-      const dispatchInputEvent = () => {
-        if (eventReflected) {
-          return;
-        }
-        eventReflected = true;
-        const inputEvent = new InputEvent("input", {
-          bubbles: true,
-          cancelable: true,
-        });
-        textarea.dispatchEvent(inputEvent);
-      };
-      textarea.addEventListener(
-        "beforeinput",
-        (event) => {
-          if (endComposing) {
-            endComposing = false;
-            eventReflected = true;
-            return;
-          }
-        },
-        true
-      );
-      textarea.addEventListener(
-        "input",
-        (event) => {
-          if (eventReflected) {
-            eventReflected = false;
-            return;
-          }
-          event.stopImmediatePropagation();
-        },
-        true
-      );
-      textarea.addEventListener("compositionstart", (event) => {
-        isComposing = true;
-        // inputイベントを再発行
-        dispatchInputEvent();
-      });
-      textarea.addEventListener("compositionend", (event) => {
-        endComposing = true;
-        isComposing = false;
-        // inputイベントを再発行
-        dispatchInputEvent();
-      });
-      textarea.addEventListener("keydown", (event) => {
-        if (isComposing) {
-          return;
-        }
-        // 特定キーの入力の場合にはinputイベント発行
-        if (/^(F[0-9]+|Enter)$/.test(event.code)) {
-          // inputイベントを再発行
-          dispatchInputEvent();
-        }
-      });
-      textarea.addEventListener("keyup", (event) => {
-        if (isComposing) {
-          return;
-        }
-
-        // 0文字、1文字の際に音声入力ボタンが切り替わることへの対応
-        if (textarea.value.length > 0 && isZero) {
-          isZero = false;
-          // inputイベントを再発行
-          dispatchInputEvent();
-        } else if (textarea.value.length === 0 && !isZero) {
-          isZero = true;
-          // inputイベントを再発行
-          dispatchInputEvent();
-        } else if (/^(Space|Backspace|Delete)$/.test(event.code)) {
-          // 特定キーの入力の場合にはinputイベント発行
-          dispatchInputEvent();
-        }
-      });
     }
 
     textarea.addEventListener(

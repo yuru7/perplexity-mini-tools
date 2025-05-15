@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
       "searchOption",
       "navigation",
       "simpleCopy",
-      "fixInputLag",
       "mermaidEnabled",
       "mermaidTheme",
     ],
@@ -49,13 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         document.getElementById("shortcut-simple-copy").checked =
           data.simpleCopy;
-      }
-
-      // テキストボックス入力時のラグを修正する（実験的機能）
-      if (data.fixInputLag === undefined) {
-        document.getElementById("fix-input-lag").checked = false;
-      } else {
-        document.getElementById("fix-input-lag").checked = data.fixInputLag;
       }
 
       // Mermaidプレビュー 有効状態
@@ -101,10 +93,6 @@ document.querySelector("form").addEventListener("submit", (e) => {
   const simpleCopy = document.getElementById("shortcut-simple-copy").checked;
   chrome.storage.local.set({ simpleCopy });
 
-  // テキストボックス入力時のラグを修正する（実験的機能）
-  const fixInputLag = document.getElementById("fix-input-lag").checked;
-  chrome.storage.local.set({ fixInputLag });
-
   // Mermaidプレビュー 有効状態
   const mermaidEnabled = document.getElementById("mermaid-enabled").checked;
   chrome.storage.local.set({ mermaidEnabled });
@@ -116,6 +104,9 @@ document.querySelector("form").addEventListener("submit", (e) => {
   } else {
     chrome.storage.local.set({ mermaidTheme });
   }
+
+  // 過去に利用していた設定の削除
+  chrome.storage.local.remove("fixInputLag"); // テキストボックス入力時のラグを修正する（実験的機能）
 
   // 設定完了メッセージを表示
   document.getElementById("confirmation-message").style.display = "block";
