@@ -282,9 +282,25 @@
       }
     }
     // Ctrl+B でレフトサイドバーにフォーカス
-    if (ctrlOrMetaKey(event) && event.code === "KeyB") {
+    // if (ctrlOrMetaKey(event) && event.code === "KeyB") {
+    //   event.preventDefault();
+    //   focusLeftSidebar();
+    //   return;
+    // }
+    // Ctrl+Shift+I で、同じスペース内で新しいスレッド
+    if (
+      window.location.pathname.startsWith(SEARCH_PATHNAME) &&
+      ctrlOrMetaKey(event) &&
+      event.shiftKey &&
+      event.code === "KeyI"
+    ) {
       event.preventDefault();
-      focusLeftSidebar();
+      const spaceLink = document.querySelector(
+        `.\\@container\\/main a[href^="${SPACE_DETAIL_PATHNAME}"]`
+      );
+      if (spaceLink) {
+        spaceLink.click();
+      }
       return;
     }
   }
@@ -1991,7 +2007,6 @@
                     setTimeout(() => {
                       button.classList.remove("simple-copy-success");
                     }, 2000);
-
                   })
                   .finally(() => {
                     // buttonからフォーカスを外す
