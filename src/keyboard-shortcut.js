@@ -288,10 +288,7 @@
     //   return;
     // }
     // Ctrl+U で、同じスペース内で新しいスレッド
-    if (
-      ctrlOrMetaKey(event) &&
-      event.code === "KeyU"
-    ) {
+    if (ctrlOrMetaKey(event) && event.code === "KeyU") {
       event.preventDefault();
       if (!window.location.pathname.startsWith(SEARCH_PATHNAME)) {
         return;
@@ -300,7 +297,17 @@
         `.\\@container\\/main a[href^="${SPACE_DETAIL_PATHNAME}"]`
       );
       if (spaceLink) {
+        showLoadingIndicator();
         spaceLink.click();
+        // location が変更されたら非表示
+        const observer = new MutationObserver(() => {
+          hideLoadingIndicator();
+          observer.disconnect();
+        });
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+        });
       }
       return;
     }
