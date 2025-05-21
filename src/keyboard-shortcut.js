@@ -1288,7 +1288,7 @@
       // 検索結果画面でのみ対応するスクロール用キーフック
       if (location.pathname.startsWith(SEARCH_PATHNAME)) {
         scrollTarget.addEventListener("keyup", (event) => {
-          if (["ArrowDown", "ArrowUp"].includes(event.code)) {
+          if (["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(event.code)) {
             if (scrolling) {
               scrolling = false;
               textarea.focus();
@@ -1304,7 +1304,7 @@
             }
             // スクロール移動
             if (
-              ["ArrowDown", "ArrowUp"].includes(event.code) &&
+              ["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(event.code) &&
               textarea.value.length === 0
             ) {
               event.stopImmediatePropagation();
