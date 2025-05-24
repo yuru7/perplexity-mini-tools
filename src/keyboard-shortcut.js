@@ -486,7 +486,7 @@
   }
 
   function getSearchBoxButtons(textarea) {
-    const parent = textarea.closest("span");
+    const parent = textarea.closest("div:has(button)");
     return parent.querySelectorAll("button");
   }
 
