@@ -1,15 +1,8 @@
 (() => {
-  const QUICK_SEARCH_MODAL_SELECTOR =
-    'div[data-testid="quick-search-modal"] button';
-  const MAIN_SEARCH_BOX_MODEL_SELECT_SELECTOR =
-    "div.gap-sm.flex > span:nth-child(1) > button";
   const MODEL_SELECT_AREA_ITEM_SELECTOR = "div.group\\/item";
   const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = 'svg[data-icon="check"]';
-  const MODEL_SELECT_AREA_ITEM_TARGET_SELECTOR =
-    "div.group\\/item:nth-child(<N>)";
+  const MAIN_TEXTAREA_SELECTOR = "main textarea";
 
-  const MAIN_SEARCH_BOX_SEARCH_SOURCE_SELECTOR =
-    "div.gap-sm.flex > span:nth-child(2) > button";
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = MODEL_SELECT_AREA_ITEM_SELECTOR;
 
   const LIBRARY_PATHNAME = "/library";
@@ -216,6 +209,43 @@
       event.stopImmediatePropagation();
       toggleWebInSearchSource();
       return;
+    }
+  }
+
+  function toolTipHandler(event) {
+    if (event.isComposing) {
+      return;
+    }
+
+    if (
+      !(
+        (ctrlOrMetaKey(event) && event.key === "Shift") ||
+        (event.shiftKey && ["Control", "Meta"].includes(event.key))
+      )
+    ) {
+      return;
+    }
+
+    if (event.type === "keydown") {
+      const textarea = document.querySelector(MAIN_TEXTAREA_SELECTOR);
+      if (!textarea) {
+        return;
+      }
+      const buttons = getSearchBoxButtons(textarea);
+      if (!buttons) {
+        return;
+      }
+      const button = buttons[MODEL_SELECT_BUTTON_POS];
+      if (!button) {
+        return;
+      }
+      const ariaLabel = button.getAttribute("aria-label");
+      if (!ariaLabel) {
+        return;
+      }
+      showTooltip(ariaLabel, textarea);
+    } else if (event.type === "keyup") {
+      hideTooltip();
     }
   }
 
@@ -455,6 +485,11 @@
     return buttons[1].dataset.state === "checked";
   }
 
+  function getSearchBoxButtons(textarea) {
+    const parent = textarea.closest("span");
+    return parent.querySelectorAll("button");
+  }
+
   async function selectSearchMode(upOrDown, buttonIndex = 0) {
     // buttonIndex = 0 の場合、「検索」と「リサーチ」の切り替えを行う
 
@@ -465,11 +500,10 @@
     }
 
     // textarea を囲む span の下から検索する
-    const mainSearchBox = document.querySelector("main textarea");
+    const mainSearchBox = document.querySelector(MAIN_TEXTAREA_SELECTOR);
     let buttons, button;
     if (mainSearchBox) {
-      const parent = mainSearchBox.closest("span");
-      buttons = parent.querySelectorAll("button");
+      buttons = getSearchBoxButtons(mainSearchBox);
       button =
         buttonIndex < 0
           ? buttons[buttons.length + buttonIndex]
@@ -510,7 +544,7 @@
             }
             const selectModelName = clickModel(node, upOrDown);
 
-            // 選択されたモデル名を表示
+            // ツールチップのテキストを更新
             showTooltip(selectModelName, mainSearchBox);
 
             // textarea のカーソル位置を戻す
@@ -535,8 +569,7 @@
     button.click();
   }
 
-  function clickModel(node, upOrDown) {
-    // 何番目の子要素にチェックが入っているかを調べる
+  function getSelectedModelIndex(node) {
     let checkedIndex = -1;
     let modelSelectBoxChildren = node.querySelectorAll(
       MODEL_SELECT_AREA_ITEM_SELECTOR
@@ -550,6 +583,12 @@
         break;
       }
     }
+    return [modelSelectBoxChildren, checkedIndex];
+  }
+
+  function clickModel(node, upOrDown) {
+    // 何番目の子要素にチェックが入っているかを調べる
+    let [modelSelectBoxChildren, checkedIndex] = getSelectedModelIndex(node);
     let add = upOrDown === UP ? -1 : 1;
     // 先頭・末尾に到達した場合はループする
     if (upOrDown === UP && checkedIndex === 0) {
@@ -603,14 +642,19 @@
     setTimeout(() => {
       tooltip.style.opacity = "0.8";
     }, 10);
+  }
 
-    // 2秒後にツールチップを非表示
+  function hideTooltip() {
+    const tooltip = document.querySelector(".pplx-mini-tools-tooltip");
+    if (!tooltip) {
+      return;
+    }
     setTimeout(() => {
       tooltip.style.opacity = "0";
       setTimeout(() => {
         tooltip.remove();
       }, 100);
-    }, 2000);
+    }, 100);
   }
 
   async function toggleWebInSearchSource() {
@@ -1288,7 +1332,9 @@
       // 検索結果画面でのみ対応するスクロール用キーフック
       if (location.pathname.startsWith(SEARCH_PATHNAME)) {
         scrollTarget.addEventListener("keyup", (event) => {
-          if (["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(event.code)) {
+          if (
+            ["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(event.code)
+          ) {
             if (scrolling) {
               scrolling = false;
               textarea.focus();
@@ -1304,7 +1350,9 @@
             }
             // スクロール移動
             if (
-              ["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(event.code) &&
+              ["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(
+                event.code
+              ) &&
               textarea.value.length === 0
             ) {
               event.stopImmediatePropagation();
@@ -2045,6 +2093,16 @@
           searchOptionHandler(event);
           // ナビゲーションショートカット
           navigationHandler(event);
+          // ツールチップ表示
+          toolTipHandler(event);
+        },
+        true
+      );
+
+      document.addEventListener(
+        "keyup",
+        (event) => {
+          toolTipHandler(event);
         },
         true
       );
