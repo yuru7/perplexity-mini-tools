@@ -122,6 +122,59 @@
     },
   };
 
+  const tooltipManager = {
+    SELECTOR: "pplx-mini-tools-tooltip",
+
+    showTooltip(message, textarea, skipIfExist = false) {
+      const oldTooltip = document.querySelector(`.${this.SELECTOR}`);
+      // スキップモードがオンで既存のツールチップがあればスキップ
+      if (skipIfExist && oldTooltip) {
+        return;
+      }
+      // 既存のツールチップを削除
+      if (oldTooltip) {
+        oldTooltip.remove();
+      }
+
+      // テキストエリア要素の取得
+      const textareaRect = textarea.getBoundingClientRect();
+
+      // ツールチップ要素の作成
+      const tooltip = document.createElement("div");
+      tooltip.className = this.SELECTOR;
+      tooltip.textContent = message;
+      document.body.appendChild(tooltip);
+
+      // ツールチップの位置設定（テキストエリアの上部中央）
+      const tooltipRect = tooltip.getBoundingClientRect();
+      tooltip.style.left =
+        textareaRect.left +
+        textareaRect.width / 2 -
+        tooltipRect.width / 2 +
+        "px";
+      tooltip.style.top =
+        textareaRect.top - tooltipRect.height - 10 + window.scrollY + "px";
+
+      // ツールチップの表示
+      setTimeout(() => {
+        tooltip.style.opacity = "0.8";
+      }, 10);
+    },
+
+    hideTooltip() {
+      const tooltip = document.querySelector(`.${this.SELECTOR}`);
+      if (!tooltip) {
+        return;
+      }
+      setTimeout(() => {
+        tooltip.style.opacity = "0";
+        setTimeout(() => {
+          tooltip.remove();
+        }, 100);
+      }, 100);
+    },
+  };
+
   async function initConfig() {
     // 設定読み込み
     const config = {};
@@ -243,9 +296,9 @@
       if (!ariaLabel) {
         return;
       }
-      showTooltip(ariaLabel, textarea);
+      tooltipManager.showTooltip(ariaLabel, textarea, true);
     } else if (event.type === "keyup") {
-      hideTooltip();
+      tooltipManager.hideTooltip();
     }
   }
 
@@ -545,7 +598,7 @@
             const selectModelName = clickModel(node, upOrDown);
 
             // ツールチップのテキストを更新
-            showTooltip(selectModelName, mainSearchBox);
+            tooltipManager.showTooltip(selectModelName, mainSearchBox);
 
             // textarea のカーソル位置を戻す
             if (isTextareaActive) {
@@ -613,48 +666,6 @@
     modelSelectBoxChildren[checkedIndex + add].click();
 
     return modelName;
-  }
-
-  function showTooltip(message, textarea) {
-    // 既存のツールチップを削除
-    const oldTooltip = document.querySelector(".pplx-mini-tools-tooltip");
-    if (oldTooltip) {
-      oldTooltip.remove();
-    }
-
-    // テキストエリア要素の取得
-    const textareaRect = textarea.getBoundingClientRect();
-
-    // ツールチップ要素の作成
-    const tooltip = document.createElement("div");
-    tooltip.className = "pplx-mini-tools-tooltip";
-    tooltip.textContent = message;
-    document.body.appendChild(tooltip);
-
-    // ツールチップの位置設定（テキストエリアの上部中央）
-    const tooltipRect = tooltip.getBoundingClientRect();
-    tooltip.style.left =
-      textareaRect.left + textareaRect.width / 2 - tooltipRect.width / 2 + "px";
-    tooltip.style.top =
-      textareaRect.top - tooltipRect.height - 10 + window.scrollY + "px";
-
-    // ツールチップの表示
-    setTimeout(() => {
-      tooltip.style.opacity = "0.8";
-    }, 10);
-  }
-
-  function hideTooltip() {
-    const tooltip = document.querySelector(".pplx-mini-tools-tooltip");
-    if (!tooltip) {
-      return;
-    }
-    setTimeout(() => {
-      tooltip.style.opacity = "0";
-      setTimeout(() => {
-        tooltip.remove();
-      }, 100);
-    }, 100);
   }
 
   async function toggleWebInSearchSource() {
