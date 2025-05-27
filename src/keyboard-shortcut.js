@@ -1,6 +1,6 @@
 (() => {
   const MODEL_SELECT_AREA_ITEM_SELECTOR = "div.group\\/item";
-  const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = 'svg[data-icon="check"]';
+  const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = 'svg';
   const MAIN_TEXTAREA_SELECTOR = "main textarea";
 
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = MODEL_SELECT_AREA_ITEM_SELECTOR;
@@ -627,11 +627,12 @@
     let modelSelectBoxChildren = node.querySelectorAll(
       MODEL_SELECT_AREA_ITEM_SELECTOR
     );
+    // チェックアイコンが表示されているアイテムを調べる
     for (let i = 0; i < modelSelectBoxChildren.length; i++) {
       const checked = modelSelectBoxChildren[i].querySelector(
         MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR
       );
-      if (checked && checked.getAttribute("aria-hidden") === "false") {
+      if (checked && window.getComputedStyle(checked).opacity > 0) {
         checkedIndex = i;
         break;
       }
