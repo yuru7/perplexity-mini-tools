@@ -1,6 +1,6 @@
 (() => {
   const MODEL_SELECT_AREA_ITEM_SELECTOR = "div.group\\/item";
-  const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = '.text-super';
+  const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = ".text-super";
   const MAIN_TEXTAREA_SELECTOR = "main textarea";
 
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = MODEL_SELECT_AREA_ITEM_SELECTOR;
@@ -331,7 +331,6 @@
           childList: true,
           subtree: true,
         });
-        return;
       } else {
         // HACK: ページ構造が変わってしまい、リンクが常に存在するわけではなくなったため直接移動も考慮
         window.location.href = LIBRARY_PATHNAME;
@@ -346,7 +345,9 @@
         return;
       }
       showLoadingIndicator();
-      const link = document.querySelector(`a[href="${SPACES_PATHNAME}"]`);
+      const link = document.querySelector(
+        `a[href="${SPACES_PATHNAME}"], a[href^="${SPACES_PATHNAME}#"]`
+      );
       if (link) {
         link.click();
         // location が変更されたら非表示
@@ -358,11 +359,11 @@
           childList: true,
           subtree: true,
         });
-        return;
       } else {
         // HACK: ページ構造が変わってしまい、リンクが常に存在するわけではなくなったため直接移動も考慮
         window.location.href = SPACES_PATHNAME;
       }
+      return;
     }
     // Ctrl+B でレフトサイドバーにフォーカス
     // if (ctrlOrMetaKey(event) && event.code === "KeyB") {
