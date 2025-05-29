@@ -13,8 +13,8 @@
   const UP = 0;
   const DOWN = 1;
 
-  const MODEL_SELECT_BUTTON_POS = 2;
-  const SEARCH_SOURCE_BUTTON_POS = 3;
+  const MODEL_SELECT_BUTTON_POS = 3;
+  const SEARCH_SOURCE_BUTTON_POS = 4;
 
   const leftSidebarState = {
     isFocused: false,
@@ -288,6 +288,9 @@
       if (!buttons) {
         return;
       }
+      if (isDeepResearchOrLabs(buttons)) {
+        return;
+      }
       const button = buttons[MODEL_SELECT_BUTTON_POS];
       if (!button) {
         return;
@@ -535,8 +538,22 @@
     },
   };
 
-  function isDeepResearch(buttons) {
-    return buttons[1].dataset.state === "checked";
+  function isDeepResearchOrLabs(buttons) {
+    return (
+      buttons[1].dataset.state === "checked" ||
+      buttons[2].dataset.state === "checked"
+    );
+  }
+
+  function getSearchModeIndex(buttons) {
+    let index = -1;
+    for (let i = 0; i < MODEL_SELECT_BUTTON_POS; i++) {
+      if (buttons[i].dataset.state === "checked") {
+        index = i;
+        break;
+      }
+    }
+    return index;
   }
 
   function getSearchBoxButtons(textarea) {
@@ -568,18 +585,30 @@
       return;
     }
 
-    // Pro ボタンと DeepResearch ボタンの切り替え動作が指定されている場合
+    // Pro, DeepResearch, Labs ボタンの切り替え動作が指定されている場合
     if (buttonIndex == 0) {
-      if (isDeepResearch(buttons)) {
-        buttons[0].click();
+      const index = getSearchModeIndex(buttons);
+      if (index < 0) {
+        return;
+      }
+      if (upOrDown === UP) {
+        if (index === 0) {
+          buttons[MODEL_SELECT_BUTTON_POS - 1].click();
+        } else {
+          buttons[index - 1].click();
+        }
       } else {
-        buttons[1].click();
+        if (index === MODEL_SELECT_BUTTON_POS - 1) {
+          buttons[0].click();
+        } else {
+          buttons[index + 1].click();
+        }
       }
       return;
     }
 
     // DeepResearch ボタンがアクティブの場合はモデル選択ボタンが表示されていないので終了
-    if (isDeepResearch(buttons)) {
+    if (isDeepResearchOrLabs(buttons)) {
       return;
     }
 
@@ -683,7 +712,7 @@
     }
 
     const buttons = mainSearchBox.closest("span").querySelectorAll("button");
-    const pos = isDeepResearch(buttons)
+    const pos = isDeepResearchOrLabs(buttons)
       ? SEARCH_SOURCE_BUTTON_POS - 1
       : SEARCH_SOURCE_BUTTON_POS;
     let searchSourceButton;
