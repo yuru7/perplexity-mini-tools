@@ -527,6 +527,12 @@
         this.textarea = activeElement;
       }
     },
+    getPos: function () {
+      return {
+        start: this.posStart,
+        end: this.posEnd,
+      };
+    },
     applyPosToTextarea: function () {
       if (this.textarea) {
         this.textarea.setSelectionRange(this.posStart, this.posEnd);
@@ -1354,6 +1360,8 @@
   function setTextareaEventListeners(textarea) {
     textarea.dataset.pmtCustomEvent = "true";
 
+    textareaSelectionManager.reset();
+
     // Ctrl+V の際にカーソルが末尾にジャンプする不具合を予防
     // 貼り付け形式がテキストの場合、標準のイベントリスナーには処理をさせない
     textarea.addEventListener(
@@ -1366,6 +1374,39 @@
       },
       true
     );
+    // フォーカスアウト & イン時にカーソル位置が移動する不具合を予防
+    let focusByMouse = false;
+    textarea.addEventListener(
+      "mousedown",
+      () => {
+        focusByMouse = true;
+      },
+      true
+    );
+    textarea.addEventListener(
+      "focusout",
+      () => {
+        textareaSelectionManager.setPosWhenTextareaActive();
+        focusByMouse = false;
+      },
+      true
+    );
+    textarea.addEventListener("focusin", async () => {
+      if (!focusByMouse && textareaSelectionManager.textarea) {
+        await sleep(50);
+        const pos = textareaSelectionManager.getPos();
+        if (
+          textarea.selectionStart !== pos.start &&
+          textarea.selectionEnd !== pos.end
+        ) {
+          textareaSelectionManager.applyPosToTextarea();
+        }
+      }
+      if (textareaSelectionManager.textarea) {
+        textareaSelectionManager.reset();
+      }
+      focusByMouse = false;
+    });
 
     let scrolling = false;
     const scrollTarget = textarea.closest(".scrollable-container");
