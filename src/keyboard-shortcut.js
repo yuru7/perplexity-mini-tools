@@ -1352,6 +1352,8 @@
   }
 
   function setTextareaEventListeners(textarea) {
+    textarea.dataset.pmtCustomEvent = "true";
+
     // Ctrl+V の際にカーソルが末尾にジャンプする不具合を予防
     // 貼り付け形式がテキストの場合、標準のイベントリスナーには処理をさせない
     textarea.addEventListener(
@@ -2006,7 +2008,7 @@
 
           // 追加された textarea 要素へのイベントリスナー
           const textareas = parent.querySelectorAll(
-            "textarea:not([data-md-textarea])"
+            "textarea:not([data-pmt-custom-event])"
           );
           textareas.forEach((textarea) => {
             setTextareaEventListeners(textarea);
@@ -2153,7 +2155,7 @@
     // Markdown編集機能を追加
     // ページ読み込み時と、DOM変更時に対応する
     const textareas = document.querySelectorAll(
-      "main textarea:not([data-md-textarea])"
+      "main textarea:not([data-pmt-custom-event])"
     );
     textareas.forEach((textarea) => {
       setTextareaEventListeners(textarea);
