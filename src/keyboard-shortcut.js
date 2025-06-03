@@ -1942,11 +1942,13 @@
                 }
                 await sleep(100);
                 const clipText = await navigator.clipboard.readText();
+                // コピーしたテキストから不要なテキストを削除
                 const cleanedText = clipText
                   .replace(
                     /(\r?\nCitations:\r?\n\[1\][\s\S]+)?---\r?\n[^\r\n]+$/,
                     ""
-                  )
+                  ) // Citations: ... 形式
+                  .replace(/\r?\n(\[[0-9]+\] https?:\/\/[^\s]+(\r?\n)?)+$/, "") // Citations: ... 形式ではなくなったので追加対応 2025-06-03
                   .replace(/\[[0-9]+\]/g, "")
                   .trim();
                 // clipboardにコピー
