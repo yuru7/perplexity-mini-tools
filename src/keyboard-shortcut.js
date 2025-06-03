@@ -1498,147 +1498,6 @@
     }
   }
 
-  function simpleCopy(button) {
-    // コピーボタンと同ブロックの親要素を取得
-    let textBlock = button;
-    let ele = button.parentElement;
-    while (ele) {
-      const block = ele.querySelector("div:has(>p)");
-      if (block) {
-        textBlock = block;
-        break;
-      }
-      ele = ele.parentElement;
-    }
-
-    const response = textBlock.cloneNode(true);
-    // 引用リンクの削除
-    response.querySelectorAll("a.citation").forEach((a) => {
-      a.remove();
-    });
-    // .mermaid-preview-button クラスの要素を削除
-    response
-      .querySelectorAll(".mermaid-preview-button-wrapper")
-      .forEach((button) => {
-        const parentDiv = button.parentElement;
-        const pre = parentDiv.querySelector("pre");
-        if (pre) {
-          pre.dataset.language = "mermaid";
-        }
-        button.remove();
-      });
-    // pre 要素を整形
-    response.querySelectorAll("div.codeWrapper").forEach((codeWrapper) => {
-      const pre = codeWrapper.closest("pre");
-      // code を pre で囲む
-      const newPre = document.createElement("pre");
-      const code = codeWrapper.querySelector("code");
-      const newCode = document.createElement("code");
-      newCode.textContent = code.textContent;
-      newPre.appendChild(newCode);
-      // 言語識別子の設定
-      let lang = "";
-      const langElement = codeWrapper.querySelector(".inline-block");
-      if (pre.dataset.language) {
-        lang = pre.dataset.language;
-      } else {
-        lang = langElement.textContent;
-      }
-      langElement.remove();
-      newPre.dataset.language = lang;
-      pre.replaceWith(newPre);
-    });
-    // turndownインスタンスの生成
-    const turndownService = new TurndownService({
-      headingStyle: "atx",
-      hr: "---",
-      bulletListMarker: "-",
-      codeBlockStyle: "fenced",
-    });
-    turndownService.use(turndownPluginGfm.gfm);
-    // 言語識別子をコードブロックに追加
-    turndownService.addRule("codeBlock", {
-      filter: "pre",
-      replacement: (content, node) => {
-        let lang = node.dataset.language;
-        if (lang) {
-          return "```" + lang + "\n" + content + "```";
-        }
-        return "```\n" + content + "```";
-      },
-    });
-    // li > p は空行を入れない
-    turndownService.addRule("listItem", {
-      filter: (node) => {
-        return node.nodeName === "P" && node.parentNode.nodeName === "LI"; // li > p
-      },
-      replacement: (content) => {
-        return content;
-      },
-    });
-    // a 要素で contentText と href が同じ場合はプレーンテキストにする
-    turndownService.addRule("link", {
-      filter: (node) => {
-        return node.nodeName === "A" && node.textContent === node.href;
-      },
-      replacement: (content) => {
-        return content;
-      },
-    });
-    // katex 項目の処理
-    turndownService.addRule("katex", {
-      filter: (node) => {
-        return node.nodeName === "SPAN" && node.classList.contains("katex");
-      },
-      replacement: (content, node) => {
-        const parent = node.parentElement;
-        const annotation = node.querySelector("annotation");
-        let annotationText = "";
-        if (annotation) {
-          annotationText = annotation.textContent.trim();
-        } else {
-          annotationText = content.trim();
-        }
-        if (parent.classList.contains("katex-display")) {
-          return "$$\n" + annotationText + "\n$$";
-        } else {
-          return "$" + annotationText + "$";
-        }
-      },
-    });
-    // Markdownに変換
-    let markdown = turndownService.turndown(response);
-    // Markdown文字列にいくつかの整形
-    markdown = markdown
-      .replace(/(^|\n)(\s*(-|[0-9]+\.) ) +/gm, "$1$2")
-      .replace(/(^|\n)(#+\s+[0-9]+)\\\./gm, "$1$2.");
-    // clipboardにコピー
-    navigator.clipboard
-      .writeText(markdown)
-      .then(() => {
-        // コピー成功時の処理
-        // ボタンの内容を一時的に保存
-        const originalDiv = button.children[0];
-        // ボタンをチェックマークに変更
-        const icon = document.createElement("img");
-        icon.src = chrome.runtime.getURL("assets/clip-check.png");
-        icon.width = 16;
-        icon.height = 16;
-        icon.classList.add("ks-check-icon");
-        const newDiv = document.createElement("div");
-        newDiv.appendChild(icon);
-        button.children[0].replaceWith(newDiv);
-        // 元に戻す
-        setTimeout(() => {
-          newDiv.replaceWith(originalDiv);
-        }, 2000);
-      })
-      .finally(() => {
-        // buttonからフォーカスを外す
-        button.blur();
-      });
-  }
-
   function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
@@ -2070,28 +1929,6 @@
 
           // 追加されたコピーボタンへの処理
           if (config.simpleCopy && copyButtons.length > 0) {
-            // コピーボタンのツールチップの文言修正
-            // const copyTooltip = parent.querySelector('span[role="tooltip"]');
-            // let copyTooltipParent;
-            // if (copyTooltip) {
-            //   let current = copyTooltip;
-            //   while (current) {
-            //     if (current.matches("div")) {
-            //       copyTooltipParent = current;
-            //       break;
-            //     }
-            //     current = current.parentElement;
-            //   }
-            // }
-            // if (copyTooltip && copyTooltip.textContent === "Copy") {
-            //   copyTooltipParent.querySelectorAll("span").forEach((span) => {
-            //     if (span.textContent === "Copy") {
-            //       span.innerText =
-            //         "Click: Normal Copy\nShift+Click: Simple Copy";
-            //     }
-            //   });
-            // }
-
             // Citation無しでコピーするイベントリスナーを追加
             copyButtons.forEach((button) => {
               if (button.dataset.simpleCopy) {
@@ -2099,18 +1936,6 @@
               }
               button.dataset.simpleCopy = true;
 
-              // TODO: 一時的に切り替え。問題なく動きそうなら simpleCopy() ごと処理を削除する
-              // button.addEventListener(
-              //   "click",
-              //   (event) => {
-              //     if (!event.shiftKey) {
-              //       return;
-              //     }
-              //     event.stopImmediatePropagation();
-              //     simpleCopy(button);
-              //   },
-              //   true
-              // );
               button.addEventListener("click", async (event) => {
                 if (!event.shiftKey) {
                   return;
