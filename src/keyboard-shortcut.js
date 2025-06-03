@@ -411,9 +411,7 @@
     // 新しいローディングインジケーターを作成
     const loader = document.createElement("div");
     loader.id = "pmt-loading-indicator";
-    loader.innerHTML = `
-    <div class="pmt-spinner"></div>
-  `;
+    loader.innerText = "Loading...";
 
     document.body.appendChild(loader);
   }
