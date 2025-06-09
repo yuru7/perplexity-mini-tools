@@ -1471,6 +1471,7 @@
         // Ctrl+Enter 送信の設定を考慮する
         if (
           !config.markdownEditorLike &&
+          config.ctrlEnter &&
           !ctrlOrMetaKey(event) &&
           event.code === "Enter"
         ) {
