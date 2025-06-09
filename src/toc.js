@@ -11,6 +11,21 @@
   let tocContainer = null;
   let currentTocItems = [];
   let isScrolling = false;
+  let isEnabled = false; // TOC機能の有効/無効状態
+  let scrollTimeout;
+
+  // 設定を読み込んでTOC機能を初期化
+  function initializeToc() {
+    if (typeof chrome !== "undefined" && chrome.storage) {
+      chrome.storage.local.get(["tocEnabled"], (data) => {
+        // デフォルトは有効
+        isEnabled = data.tocEnabled !== false;
+      });
+    } else {
+      // Chrome APIが利用できない場合はデフォルトで有効
+      isEnabled = true;
+    }
+  }
 
   // 目次コンテナーを作成
   function createTocContainer() {
@@ -67,7 +82,9 @@
       // スクロール完了後にフラグをリセットし、再度更新
       setTimeout(() => {
         isScrolling = false;
-        updateActiveItem();
+        if (!scrollTimeout) {
+          updateActiveItem();
+        }
       }, 1000);
     };
 
@@ -171,7 +188,7 @@
       if (
         (i == 0 && rect.top >= 0) ||
         (i == currentTocItems.length - 1 && rect.top <= 0) ||
-        (beforeTop < 0 && rect.top < 10 && rect.top > 0)
+        (beforeTop < 0 && rect.top < 50 && rect.top > 0)
       ) {
         activeIndex = i;
         break;
@@ -201,7 +218,7 @@
   // MutationObserver でDOMの変更を監視
   let updateTimeout;
   const observer = new MutationObserver((mutations) => {
-    if (!location.pathname.startsWith("/search")) {
+    if (!isEnabled || isScrolling || !location.pathname.startsWith("/search")) {
       return;
     }
 
@@ -238,12 +255,21 @@
           scrollableContainer &&
           scrollableContainer.dataset.tocEnabled !== "true"
         ) {
-          let scrollTimeout;
           scrollableContainer.dataset.tocEnabled = "true";
-          scrollableContainer.addEventListener("scroll", () => {
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(updateActiveItem, 200);
-          });
+          scrollableContainer.addEventListener(
+            "scroll",
+            () => {
+              //   clearTimeout(scrollTimeout);
+              if (scrollTimeout) {
+                return;
+              }
+              scrollTimeout = setTimeout(() => {
+                updateActiveItem();
+                scrollTimeout = null;
+              }, 300);
+            },
+            { passive: true }
+          );
         }
       }
     });
@@ -261,24 +287,15 @@
     subtree: true,
   });
 
-  //   // 初期化
-  //   if (document.readyState === "loading") {
-  //     document.addEventListener("DOMContentLoaded", updateToc);
-  //   } else {
-  //     updateToc();
-  //   }
+  // 初期化
+  initializeToc();
 
-  //   // ページ遷移時の再初期化（SPA対応）
-  //   let currentUrl = location.href;
-  //   const urlObserver = new MutationObserver(() => {
-  //     if (location.href !== currentUrl) {
-  //       currentUrl = location.href;
-  //       setTimeout(updateToc, 500); // ページ遷移完了を待って更新
-  //     }
-  //   });
-
-  //   urlObserver.observe(document.body, {
-  //     childList: true,
-  //     subtree: true,
-  //   });
+  // ページ読み込み完了時に更新
+  if (location.pathname.startsWith("/search")) {
+    if (document.readyState === "complete") {
+      updateToc();
+    } else {
+      document.addEventListener("DOMContentLoaded", updateToc);
+    }
+  }
 })();

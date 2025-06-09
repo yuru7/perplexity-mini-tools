@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "simpleCopy",
       "mermaidEnabled",
       "mermaidTheme",
+      "tocEnabled",
     ],
     (data) => {
       // Markdownエディターライクな操作設定
@@ -61,6 +62,13 @@ document.addEventListener("DOMContentLoaded", () => {
       // Mermaidのテーマ設定
       document.getElementById("mermaid-theme").value =
         data.mermaidTheme || "auto";
+
+      // TOC機能の設定
+      if (data.tocEnabled === undefined) {
+        document.getElementById("toc-enabled").checked = true;
+      } else {
+        document.getElementById("toc-enabled").checked = data.tocEnabled;
+      }
     }
   );
 });
@@ -104,6 +112,10 @@ document.querySelector("form").addEventListener("submit", (e) => {
   } else {
     chrome.storage.local.set({ mermaidTheme });
   }
+
+  // TOC機能の設定
+  const tocEnabled = document.getElementById("toc-enabled").checked;
+  chrome.storage.local.set({ tocEnabled });
 
   // 過去に利用していた設定の削除
   chrome.storage.local.remove("fixInputLag"); // テキストボックス入力時のラグを修正する（実験的機能）
