@@ -342,8 +342,8 @@
 }
 
 .indicator-point {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   background: rgba(255, 255, 255, 0.4);
   border-radius: 50%;
   margin: 4px -1px;
@@ -353,10 +353,10 @@
 
 .indicator-point:hover:not(.active) {
   background: rgba(255, 255, 255, 0.7);
-  transform: scale(1.2);
+  transform: scale(1.4);
 }
 
 .indicator-point.active {
   background: rgba(255, 255, 255, 0.7);
-  transform: scale(1.2);
+  transform: scale(1.3);
 }
