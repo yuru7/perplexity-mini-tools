@@ -171,7 +171,7 @@
       if (
         (i == 0 && rect.top >= 0) ||
         (i == currentTocItems.length - 1 && rect.top <= 0) ||
-        (beforeTop < 0 && rect.top < 10)
+        (beforeTop < 0 && rect.top < 10 && rect.top > 0)
       ) {
         activeIndex = i;
         break;
@@ -199,6 +199,7 @@
   }
 
   // MutationObserver でDOMの変更を監視
+  let updateTimeout;
   const observer = new MutationObserver((mutations) => {
     if (!location.pathname.startsWith("/search")) {
       return;
@@ -230,7 +231,6 @@
         }
 
         // スクロールイベントでアクティブアイテムを更新
-        let scrollTimeout;
         const scrollableContainer = document.querySelector(
           ".scrollable-container"
         );
@@ -238,6 +238,7 @@
           scrollableContainer &&
           scrollableContainer.dataset.tocEnabled !== "true"
         ) {
+          let scrollTimeout;
           scrollableContainer.dataset.tocEnabled = "true";
           scrollableContainer.addEventListener("scroll", () => {
             clearTimeout(scrollTimeout);
@@ -249,7 +250,8 @@
 
     if (shouldUpdate) {
       // 少し遅延させて更新（DOM更新の完了を待つため）
-      setTimeout(updateToc, 100);
+      clearTimeout(updateTimeout);
+      updateTimeout = setTimeout(updateToc, 500);
     }
   });
 
