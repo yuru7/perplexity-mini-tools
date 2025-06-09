@@ -273,8 +273,8 @@
 /* TOC Styles */
 #toc-container {
   position: fixed;
-  top: 50%;
-  right: 20px;
+  top: 25%;
+  right: 23px;
   transform: translateY(-50%);
   z-index: 10000;
   transition: all 0.3s ease;
@@ -282,7 +282,7 @@
 
 .toc-indicator {
   width: 4px;
-  padding: 10px 12px 10px 8px;
+  padding: 10px 18px 10px 8px;
   border-radius: 2px;
   position: relative;
   cursor: pointer;
@@ -291,7 +291,7 @@
 
 .toc-body {
   position: absolute;
-  right: 16px;
+  right: 23px;
   top: 0;
   width: 280px;
   max-height: 60vh;

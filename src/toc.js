@@ -218,7 +218,14 @@
   // MutationObserver でDOMの変更を監視
   let updateTimeout;
   const observer = new MutationObserver((mutations) => {
-    if (!isEnabled || isScrolling || !location.pathname.startsWith("/search")) {
+    if (!isEnabled) {
+      return;
+    }
+    if (!location.pathname.startsWith("/search")) {
+      if (tocContainer) {
+        tocContainer.remove();
+        tocContainer = null;
+      }
       return;
     }
 
@@ -248,6 +255,9 @@
         }
 
         // スクロールイベントでアクティブアイテムを更新
+        if (isScrolling) {
+          return;
+        }
         const scrollableContainer = document.querySelector(
           ".scrollable-container"
         );
