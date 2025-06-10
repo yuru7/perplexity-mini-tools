@@ -265,7 +265,7 @@
 /* TOC Styles */
 #toc-container {
   position: fixed;
-  top: 25%;
+  top: max(25%, 170px);
   right: 23px;
   transform: translateY(-50%);
   z-index: 10000;
@@ -372,5 +372,4 @@
   .indicator-point.active {
     background: rgba(255, 255, 255, 0.8);
   }
-    
 }
