@@ -321,6 +321,8 @@
   line-height: 1.4;
   font-size: 0.85rem;
   border-left: 3px solid transparent;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .toc-item:hover:not(.active) {

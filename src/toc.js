@@ -91,12 +91,17 @@
     item.addEventListener("click", scrollToElement);
     indicatorPoint.addEventListener("click", scrollToElement);
 
+    let textContent = "";
     let query = element.querySelector(".group\\/query");
     if (query) {
-      item.textContent = query.textContent.trim();
+      textContent = query.textContent.trim();
     } else {
-      item.textContent = element.textContent.trim();
+      textContent = element.textContent.trim();
     }
+    item.textContent =
+      textContent.length > 150
+        ? textContent.substring(0, 150) + "..."
+        : textContent;
     item.dataset.index = index;
     indicatorPoint.dataset.index = index;
 
