@@ -188,7 +188,7 @@
       if (
         (i == 0 && rect.top >= 0) ||
         (i == currentTocItems.length - 1 && rect.top <= 0) ||
-        (beforeTop < 0 && rect.top < 50 && rect.top > 0)
+        (beforeTop < 0 && rect.top < 60 && rect.top > 0)
       ) {
         activeIndex = i;
         break;
