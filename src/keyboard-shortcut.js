@@ -1,7 +1,7 @@
 (() => {
   const MODEL_SELECT_AREA_ITEM_SELECTOR = "div.group\\/item";
   const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = ".text-super";
-  const MAIN_TEXTAREA_SELECTOR = "main textarea";
+  const MAIN_TEXTAREA_SELECTOR = "main div:has(#ask-input):has(button)";
 
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = MODEL_SELECT_AREA_ITEM_SELECTOR;
 
@@ -265,6 +265,21 @@
     }
   }
 
+  // 使用箇所で最もネストされた要素を取得する関数
+  function getDeepestMainTextarea() {
+    const elements = Array.from(
+      document.querySelectorAll(MAIN_TEXTAREA_SELECTOR)
+    );
+    if (elements.length === 0) return null;
+    if (elements.length === 1) return elements[0];
+
+    // 他の要素の祖先でない要素（最も深い要素）を見つける
+    return elements.find(
+      (element) =>
+        !elements.some((other) => other !== element && element.contains(other))
+    );
+  }
+
   function toolTipHandler(event) {
     if (event.isComposing) {
       return;
@@ -280,7 +295,7 @@
     }
 
     if (event.type === "keydown") {
-      const textarea = document.querySelector(MAIN_TEXTAREA_SELECTOR);
+      const textarea = getDeepestMainTextarea();
       if (!textarea) {
         return;
       }
@@ -575,7 +590,7 @@
     }
 
     // textarea を囲む span の下から検索する
-    const mainSearchBox = document.querySelector(MAIN_TEXTAREA_SELECTOR);
+    const mainSearchBox = getDeepestMainTextarea();
     let buttons, button;
     if (mainSearchBox) {
       buttons = getSearchBoxButtons(mainSearchBox);
