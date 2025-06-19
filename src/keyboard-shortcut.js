@@ -1497,19 +1497,20 @@
     );
 
     // Markdownエディターライクな操作を追加
-    if (config.markdownEditorLike) {
-      if (config.ctrlEnter) {
-        const mdTextarea = new MDTextarea(textarea, [], false);
-        mdTextarea.enable();
-      } else {
-        const mdTextarea = new MDTextarea(
-          textarea,
-          [MDTextarea.SHIFT_KEY],
-          false
-        );
-        mdTextarea.enable();
-      }
-    }
+    // TODO: 2025-06-19 PerplexityのUIに変更が加わっている最中なので様子見
+    // if (config.markdownEditorLike) {
+    //   if (config.ctrlEnter) {
+    //     const mdTextarea = new MDTextarea(textarea, [], false);
+    //     mdTextarea.enable();
+    //   } else {
+    //     const mdTextarea = new MDTextarea(
+    //       textarea,
+    //       [MDTextarea.SHIFT_KEY],
+    //       false
+    //     );
+    //     mdTextarea.enable();
+    //   }
+    // }
   }
 
   function sleep(ms) {

@@ -12,20 +12,21 @@ document.addEventListener("DOMContentLoaded", () => {
       "tocEnabled",
     ],
     (data) => {
-      // Markdownエディターライクな操作設定
-      if (data.markdownEditorLike === undefined) {
-        document.getElementById("markdown-editor-like").checked = true;
-      } else {
-        document.getElementById("markdown-editor-like").checked =
-          data.markdownEditorLike;
-      }
+      // TODO: 2025-06-19 PerplexityのUIに変更が加わっている最中なので様子見
+      // // Markdownエディターライクな操作設定
+      // if (data.markdownEditorLike === undefined) {
+      //   document.getElementById("markdown-editor-like").checked = true;
+      // } else {
+      //   document.getElementById("markdown-editor-like").checked =
+      //     data.markdownEditorLike;
+      // }
 
-      // 送信を Ctrl+Enter にする設定
-      if (data.ctrlEnter === undefined) {
-        document.getElementById("ctrl-enter").checked = false;
-      } else {
-        document.getElementById("ctrl-enter").checked = data.ctrlEnter;
-      }
+      // // 送信を Ctrl+Enter にする設定
+      // if (data.ctrlEnter === undefined) {
+      //   document.getElementById("ctrl-enter").checked = false;
+      // } else {
+      //   document.getElementById("ctrl-enter").checked = data.ctrlEnter;
+      // }
 
       // 検索オプション切り替えの設定
       if (data.searchOption === undefined) {
@@ -77,15 +78,16 @@ document.addEventListener("DOMContentLoaded", () => {
 document.querySelector("form").addEventListener("submit", (e) => {
   e.preventDefault();
 
-  // Markdownエディターライクな操作設定
-  const markdownEditorLike = document.getElementById(
-    "markdown-editor-like"
-  ).checked;
-  chrome.storage.local.set({ markdownEditorLike });
+  // TODO: 2025-06-19 PerplexityのUIに変更が加わっている最中なので様子見
+  // // Markdownエディターライクな操作設定
+  // const markdownEditorLike = document.getElementById(
+  //   "markdown-editor-like"
+  // ).checked;
+  // chrome.storage.local.set({ markdownEditorLike });
 
-  // 送信を Ctrl+Enter にする設定
-  const ctrlEnter = document.getElementById("ctrl-enter").checked;
-  chrome.storage.local.set({ ctrlEnter });
+  // // 送信を Ctrl+Enter にする設定
+  // const ctrlEnter = document.getElementById("ctrl-enter").checked;
+  // chrome.storage.local.set({ ctrlEnter });
 
   // 検索オプションの設定
   const searchOption = document.getElementById(
