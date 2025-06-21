@@ -1477,24 +1477,25 @@
       );
     }
 
-    textarea.addEventListener(
-      "keydown",
-      (event) => {
-        if (event.isComposing) {
-          return;
-        }
-        // Ctrl+Enter 送信の設定を考慮する
-        if (
-          !config.markdownEditorLike &&
-          config.ctrlEnter &&
-          !ctrlOrMetaKey(event) &&
-          event.code === "Enter"
-        ) {
-          event.stopImmediatePropagation();
-        }
-      },
-      true
-    );
+    // TODO: 2025-06-19 PerplexityのUIに変更が加わっている最中なので様子見
+    // textarea.addEventListener(
+    //   "keydown",
+    //   (event) => {
+    //     if (event.isComposing) {
+    //       return;
+    //     }
+    //     // Ctrl+Enter 送信の設定を考慮する
+    //     if (
+    //       !config.markdownEditorLike &&
+    //       config.ctrlEnter &&
+    //       !ctrlOrMetaKey(event) &&
+    //       event.code === "Enter"
+    //     ) {
+    //       event.stopImmediatePropagation();
+    //     }
+    //   },
+    //   true
+    // );
 
     // Markdownエディターライクな操作を追加
     // TODO: 2025-06-19 PerplexityのUIに変更が加わっている最中なので様子見
