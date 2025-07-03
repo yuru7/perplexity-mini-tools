@@ -635,6 +635,11 @@
       mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
           try {
+            // 通常の要素以外はスキップ
+            if (node.tagName !== "DIV") {
+              return;
+            }
+
             // ポップアップがちらつくのでいったん非表示にするCSSを適用
             node.style.display = "none";
 
@@ -657,7 +662,9 @@
             }
           } finally {
             // ポップアップ非表示CSSを削除
-            node.style.display = "";
+            if (node.tagName === "DIV") {
+              node.style.display = "";
+            }
           }
         });
       });
@@ -703,6 +710,36 @@
     ) {
       checkedIndex = 0;
       add = 0;
+    }
+    // MAXモードでしか選択できないモデルをスキップする
+    let maxLoopCount = 20;
+    while (maxLoopCount > 0) {
+      if (modelSelectBoxChildren[checkedIndex + add].querySelector(".bg-max")) {
+        if (
+          upOrDown === UP &&
+          checkedIndex === modelSelectBoxChildren.length - 1
+        ) {
+          checkedIndex--;
+          add = 0;
+        } else if (upOrDown === DOWN && checkedIndex === 0) {
+          checkedIndex++;
+          add = 0;
+        } else {
+          checkedIndex += add * 2;
+          add = 0;
+        }
+
+        if (checkedIndex >= modelSelectBoxChildren.length) {
+          checkedIndex = 0;
+          add = 0;
+        } else if (checkedIndex < 0) {
+          checkedIndex = modelSelectBoxChildren.length - 1;
+          add = 0;
+        }
+      } else {
+        break;
+      }
+      maxLoopCount--;
     }
 
     const modelName = modelSelectBoxChildren[checkedIndex + add].querySelector(
