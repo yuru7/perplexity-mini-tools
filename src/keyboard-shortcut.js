@@ -9,18 +9,13 @@
   const SPACES_PATHNAME = "/spaces";
   const SPACE_DETAIL_PATHNAME = "/collections";
   const SEARCH_PATHNAME = "/search";
+  const PAGE_PATHNAME = "/page";
 
   const UP = 0;
   const DOWN = 1;
 
   const MODEL_SELECT_BUTTON_POS = 3;
   const SEARCH_SOURCE_BUTTON_POS = 4;
-
-  const leftSidebarState = {
-    isFocused: false,
-    items: null,
-    focusIndex: -1,
-  };
 
   const libraryLinks = {
     activeIndex: -1,
@@ -383,12 +378,7 @@
       }
       return;
     }
-    // Ctrl+B でレフトサイドバーにフォーカス
-    // if (ctrlOrMetaKey(event) && event.code === "KeyB") {
-    //   event.preventDefault();
-    //   focusLeftSidebar();
-    //   return;
-    // }
+
     // Ctrl+U で、同じスペース内で新しいスレッド
     if (ctrlOrMetaKey(event) && event.code === "KeyU") {
       event.preventDefault();
@@ -436,96 +426,6 @@
     const loader = document.getElementById("pmt-loading-indicator");
     if (loader) {
       loader.remove();
-    }
-  }
-
-  function focusLeftSidebar() {
-    const leftSidebar = document.querySelector("div.group\\/bar");
-    if (!leftSidebar) {
-      return;
-    }
-    let leftSidebarItems = leftSidebar.querySelectorAll("a");
-    if (leftSidebarItems.length === 0) {
-      return;
-    }
-
-    // 先頭はロゴなので削除
-    leftSidebarItems = Array.from(leftSidebarItems).slice(1);
-
-    leftSidebarState.items = leftSidebarItems;
-    leftSidebarItems.forEach((item, index) => {
-      if (item.dataset.sidebarFocusedEventAdded) {
-        return;
-      }
-      item.dataset.sidebarFocusedEventAdded = true;
-      item.addEventListener(
-        "focus",
-        (event) => {
-          leftSidebarState.isFocused = true;
-          leftSidebarState.focusIndex = index;
-        },
-        true
-      );
-      item.addEventListener(
-        "blur",
-        (event) => {
-          event.target.classList.remove("sidebar-focus");
-          leftSidebarState.isFocused = false;
-          leftSidebarState.focusIndex = -1;
-        },
-        true
-      );
-    });
-
-    // HACK: focus イベント内で sidebar-focus クラスを追加するとマウスクリックでも反応してしまうので、個別に追加する
-    leftSidebarItems[0].focus();
-    leftSidebarItems[0].classList.add("sidebar-focus");
-  }
-
-  function selectLeftSidebarItem(event) {
-    if (!leftSidebarState.isFocused) {
-      return;
-    }
-    if (event.isComposing) {
-      return;
-    }
-    const focusIndex = leftSidebarState.focusIndex;
-    if (
-      event.code === "Escape" ||
-      (ctrlOrMetaKey(event) && event.code === "KeyB")
-    ) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      leftSidebarState.items[focusIndex].blur();
-    }
-    if (event.code === "Enter") {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      leftSidebarState.items[focusIndex].click();
-      leftSidebarState.items[focusIndex].blur();
-      return;
-    }
-    if (event.code === "ArrowDown") {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      leftSidebarState.items[focusIndex].blur();
-      const nextItem =
-        leftSidebarState.items[
-          (focusIndex + 1) % leftSidebarState.items.length
-        ];
-      nextItem.focus();
-      nextItem.classList.add("sidebar-focus");
-    } else if (event.code === "ArrowUp") {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      leftSidebarState.items[focusIndex].blur();
-      const nextItem =
-        leftSidebarState.items[
-          (focusIndex - 1 + leftSidebarState.items.length) %
-            leftSidebarState.items.length
-        ];
-      nextItem.focus();
-      nextItem.classList.add("sidebar-focus");
     }
   }
 
@@ -1465,7 +1365,10 @@
       scrollTarget.style.outline = "none";
 
       // 検索結果画面でのみ対応するスクロール用キーフック
-      if (location.pathname.startsWith(SEARCH_PATHNAME)) {
+      if (
+        location.pathname.startsWith(SEARCH_PATHNAME) ||
+        location.pathname.startsWith(PAGE_PATHNAME)
+      ) {
         scrollTarget.addEventListener("keyup", (event) => {
           if (
             ["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(event.code)
@@ -2049,11 +1952,6 @@
       document.addEventListener(
         "keydown",
         (event) => {
-          // 左サイドバーがフォーカスされている場合の処理
-          if (leftSidebarState.isFocused) {
-            selectLeftSidebarItem(event);
-            return;
-          }
           // 検索オプション切り替え
           searchOptionHandler(event);
           // ナビゲーションショートカット
