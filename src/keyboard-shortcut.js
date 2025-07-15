@@ -1475,8 +1475,7 @@
 
       if (["ArrowUp", "ArrowDown"].includes(event.code)) {
         event.preventDefault();
-        const currentLink =
-          libraryLinks.links[libraryLinks.activeIndex];
+        const currentLink = libraryLinks.links[libraryLinks.activeIndex];
         if (currentLink) {
           currentLink.classList.remove("search-result-active");
           currentLink.removeAttribute("data-page-end");
@@ -1512,10 +1511,7 @@
           libraryLinks.activeIndex
         ].closest(".scrollable-container");
         if (scrollContainer) {
-          if (
-            libraryLinks.activeIndex ===
-            libraryLinks.links.length - 1
-          ) {
+          if (libraryLinks.activeIndex === libraryLinks.links.length - 1) {
             scrollContainer.scrollTop = scrollContainer.scrollHeight;
             nextLink.dataset.pageEnd = true;
           } else if (libraryLinks.activeIndex === 0) {
@@ -1692,9 +1688,7 @@
 
         const spacesParent = tmp.parentElement;
         const items = spacesParent.querySelectorAll("a");
-        let targetItem = spacesParent.querySelector(
-          "a.space-selection-active"
-        );
+        let targetItem = spacesParent.querySelector("a.space-selection-active");
         if (!targetItem) {
           targetItem = items[0];
           targetItem.classList.add("space-selection-active");
@@ -1725,9 +1719,7 @@
           targetItem.classList.remove("space-selection-active");
           targetItem =
             items[
-              (Array.from(items).indexOf(targetItem) -
-                1 +
-                items.length) %
+              (Array.from(items).indexOf(targetItem) - 1 + items.length) %
                 items.length
             ];
           targetItem.classList.add("space-selection-active");
@@ -1736,9 +1728,7 @@
           event.preventDefault();
           targetItem.classList.remove("space-selection-active");
           targetItem =
-            items[
-              (Array.from(items).indexOf(targetItem) + 1) % items.length
-            ];
+            items[(Array.from(items).indexOf(targetItem) + 1) % items.length];
           targetItem.classList.add("space-selection-active");
           targetItem.scrollIntoView({ block: "nearest" });
         } else if (event.code === "ArrowUp") {
@@ -1749,9 +1739,7 @@
             index =
               currentIndex +
               wrapCount *
-                Math.floor(
-                  (items.length - (currentIndex + 1)) / wrapCount
-                );
+                Math.floor((items.length - (currentIndex + 1)) / wrapCount);
           }
           targetItem.classList.remove("space-selection-active");
           targetItem = items[index];
@@ -1776,9 +1764,7 @@
 
   // スペース詳細ページのショートカット
   function setSpaceDetailEventListeners(parent) {
-    const scrollableContainer = parent.querySelector(
-      ".scrollable-container"
-    );
+    const scrollableContainer = parent.querySelector(".scrollable-container");
     if (!scrollableContainer) {
       return;
     }
@@ -1829,9 +1815,7 @@
         return;
       }
 
-      const links = Array.from(
-        scrollableContainer.querySelectorAll("a")
-      );
+      const links = Array.from(scrollableContainer.querySelectorAll("a"));
       const index = links.indexOf(activeLink);
       if (event.code === "ArrowUp") {
         event.preventDefault();
@@ -1859,6 +1843,34 @@
         if (node.nodeType === Node.ELEMENT_NODE) {
           const parent = node.parentElement;
           if (!parent) {
+            return;
+          }
+
+          // HACK: IME入力時にEnterが反応しなくなることがある事象への対処
+          if (location.pathname === "/") {
+            const askInput = document.getElementById("ask-input");
+            if (askInput && !askInput.dataset.askInputEventAdded) {
+              askInput.addEventListener("keydown", (event) => {
+                if (event.code === "Enter") {
+                  if (event.isComposing) {
+                    return;
+                  }
+                  if (askInput.textContent.trim() === "") {
+                    return;
+                  }
+                  setTimeout(() => {
+                    if (location.pathname !== "/") {
+                      return;
+                    }
+                    const submitButton = document.querySelector(
+                      'button[data-testid="submit-button"]'
+                    );
+                    submitButton.click();
+                  }, 500);
+                }
+              });
+              askInput.dataset.askInputEventAdded = true;
+            }
             return;
           }
 
