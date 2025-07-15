@@ -1458,6 +1458,401 @@
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  // ライブラリページのショートカット
+  function setLibraryEventListeners(parent) {
+    function activeLinkHandler(event, scrollCenter = false) {
+      if (event.isComposing) {
+        return;
+      }
+      if (libraryLinks.activeIndex === -1) {
+        return;
+      }
+
+      if (event.code === "Enter") {
+        libraryLinks.links[libraryLinks.activeIndex].click();
+        return;
+      }
+
+      if (["ArrowUp", "ArrowDown"].includes(event.code)) {
+        event.preventDefault();
+        const currentLink =
+          libraryLinks.links[libraryLinks.activeIndex];
+        if (currentLink) {
+          currentLink.classList.remove("search-result-active");
+          currentLink.removeAttribute("data-page-end");
+        }
+
+        if (event.code === "ArrowUp") {
+          libraryLinks.activeIndex =
+            libraryLinks.activeIndex > 0
+              ? libraryLinks.activeIndex - 1
+              : libraryLinks.activeIndex;
+        } else if (event.code === "ArrowDown") {
+          libraryLinks.activeIndex =
+            libraryLinks.activeIndex < libraryLinks.links.length - 1
+              ? libraryLinks.activeIndex + 1
+              : libraryLinks.activeIndex;
+        }
+
+        const nextLink = libraryLinks.links[libraryLinks.activeIndex];
+
+        nextLink.classList.add("search-result-active");
+
+        // スクロール
+        if (scrollCenter) {
+          nextLink.scrollIntoView({
+            block: "center",
+          });
+        } else {
+          nextLink.scrollIntoView({
+            block: "nearest",
+          });
+        }
+        const scrollContainer = libraryLinks.links[
+          libraryLinks.activeIndex
+        ].closest(".scrollable-container");
+        if (scrollContainer) {
+          if (
+            libraryLinks.activeIndex ===
+            libraryLinks.links.length - 1
+          ) {
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+            nextLink.dataset.pageEnd = true;
+          } else if (libraryLinks.activeIndex === 0) {
+            scrollContainer.scrollTop = 0;
+          }
+        }
+      }
+    }
+
+    const inputs = parent.querySelectorAll("input");
+    inputs.forEach((input) => {
+      // input要素にフォーカスした際に、イベントトリガーを追加
+
+      // 親要素が非表示の場合
+      let doNotFocus = false;
+      let ele = input;
+      while (ele) {
+        if (window.getComputedStyle(ele).display === "none") {
+          doNotFocus = true;
+        }
+        ele = ele.parentElement;
+      }
+
+      if (!doNotFocus && document.activeElement !== input) {
+        input.focus();
+      }
+
+      // ナビゲーションが無効の場合、イベントハンドラーの設定はしない
+      if (!config.navigation) {
+        return;
+      }
+
+      if (input.dataset.searchEventAdded) {
+        return;
+      }
+
+      if (input.closest(".md\\:hidden")) {
+        input.addEventListener(
+          "keydown",
+          (event) => {
+            activeLinkHandler(event, true);
+          },
+          true
+        );
+      } else {
+        input.addEventListener("keydown", activeLinkHandler, true);
+      }
+      input.dataset.searchEventAdded = true;
+
+      const isOuter = (current) => {
+        return (
+          current.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`) &&
+          current.classList.contains("w-full")
+        );
+      };
+
+      let outer;
+      let current = input;
+      while (current) {
+        if (isOuter(current)) {
+          outer = current;
+          break;
+        }
+        current = current.parentElement;
+      }
+
+      const setObserver = () => {
+        // outerに変更があった場合、targetLinksを初期化する
+        const observer = new MutationObserver(async (mutations) => {
+          if (location.pathname !== LIBRARY_PATHNAME) {
+            observer.disconnect();
+            return;
+          }
+
+          if (!outer) {
+            return;
+          }
+
+          mutations.forEach((mutation) => {
+            if (mutation.type === "childList") {
+              timerManager.debounce("searchLinks", 50, () => {
+                libraryLinks.init(outer);
+              });
+            }
+          });
+        });
+        observer.observe(outer, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+        });
+      };
+
+      if (!outer) {
+        // 親要素が見つからない場合、MutationObserverを使用して監視する
+        const observer = new MutationObserver(async (mutations) => {
+          if (location.pathname !== LIBRARY_PATHNAME) {
+            observer.disconnect();
+            return;
+          }
+
+          let current = input;
+          while (current) {
+            if (isOuter(current)) {
+              outer = current;
+              break;
+            }
+            current = current.parentElement;
+          }
+
+          if (!outer) {
+            return;
+          }
+          libraryLinks.init(outer);
+          setObserver();
+          observer.disconnect();
+        });
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+        });
+
+        return;
+      } else {
+        libraryLinks.init(outer);
+        setObserver();
+      }
+    });
+
+    return;
+  }
+
+  // スペース一覧ページのショートカット
+  function setSpacesEventListeners() {
+    // ナビゲーションが無効の場合、イベントハンドラーの設定はしない
+    if (!config.navigation) {
+      return;
+    }
+
+    if (document.querySelector(".space-selection-active")) {
+      return;
+    }
+
+    const targetItem = document.querySelector(".contents a");
+    if (!targetItem) {
+      return;
+    }
+    targetItem.classList.add("space-selection-active");
+
+    if (document.body.dataset.spacesEventAdded) {
+      return;
+    }
+
+    document.body.dataset.spacesEventAdded = true;
+    document.body.addEventListener(
+      "keydown",
+      (event) => {
+        if (location.pathname !== SPACES_PATHNAME) {
+          return;
+        }
+        if (event.isComposing) {
+          return;
+        }
+        if (document.body.querySelector("body > div div.fixed")) {
+          // ポップアップが表示されている場合は何もしない
+          return;
+        }
+
+        const tmp = document.querySelector(".contents a");
+        if (!tmp) {
+          return;
+        }
+
+        const spacesParent = tmp.parentElement;
+        const items = spacesParent.querySelectorAll("a");
+        let targetItem = spacesParent.querySelector(
+          "a.space-selection-active"
+        );
+        if (!targetItem) {
+          targetItem = items[0];
+          targetItem.classList.add("space-selection-active");
+        }
+
+        if (event.code === "Enter") {
+          event.preventDefault();
+          targetItem.click();
+          return;
+        }
+
+        // 折り返し要素数を取得する
+        // a要素はカードスタイルで画面サイズに応じて折り返しが発生するので、
+        // 画面上の絶対位置が前要素より左位置になったところで折り返し要素数とする
+        let wrapCount = 0;
+        for (let i = 1; i < items.length; i++) {
+          if (
+            items[i].getBoundingClientRect().left <
+            items[i - 1].getBoundingClientRect().left
+          ) {
+            wrapCount = i + 1;
+            break;
+          }
+        }
+
+        if (event.code === "ArrowLeft") {
+          event.preventDefault();
+          targetItem.classList.remove("space-selection-active");
+          targetItem =
+            items[
+              (Array.from(items).indexOf(targetItem) -
+                1 +
+                items.length) %
+                items.length
+            ];
+          targetItem.classList.add("space-selection-active");
+          targetItem.scrollIntoView({ block: "nearest" });
+        } else if (event.code === "ArrowRight") {
+          event.preventDefault();
+          targetItem.classList.remove("space-selection-active");
+          targetItem =
+            items[
+              (Array.from(items).indexOf(targetItem) + 1) % items.length
+            ];
+          targetItem.classList.add("space-selection-active");
+          targetItem.scrollIntoView({ block: "nearest" });
+        } else if (event.code === "ArrowUp") {
+          event.preventDefault();
+          const currentIndex = Array.from(items).indexOf(targetItem);
+          let index = currentIndex - wrapCount;
+          if (index < 0) {
+            index =
+              currentIndex +
+              wrapCount *
+                Math.floor(
+                  (items.length - (currentIndex + 1)) / wrapCount
+                );
+          }
+          targetItem.classList.remove("space-selection-active");
+          targetItem = items[index];
+          targetItem.classList.add("space-selection-active");
+          targetItem.scrollIntoView({ block: "nearest" });
+        } else if (event.code === "ArrowDown") {
+          event.preventDefault();
+          const currentIndex = Array.from(items).indexOf(targetItem);
+          let index = currentIndex + wrapCount;
+          if (index >= items.length) {
+            index = currentIndex % wrapCount;
+          }
+          targetItem.classList.remove("space-selection-active");
+          targetItem = items[index];
+          targetItem.classList.add("space-selection-active");
+          targetItem.scrollIntoView({ block: "nearest" });
+        }
+      },
+      true
+    );
+  }
+
+  // スペース詳細ページのショートカット
+  function setSpaceDetailEventListeners(parent) {
+    const scrollableContainer = parent.querySelector(
+      ".scrollable-container"
+    );
+    if (!scrollableContainer) {
+      return;
+    }
+
+    if (scrollableContainer.dataset.spaceDetailEventAdded) {
+      return;
+    }
+    scrollableContainer.dataset.spaceDetailEventAdded = true;
+
+    scrollableContainer.addEventListener("focus", (event) => {
+      const activeLink = scrollableContainer.querySelector(
+        "a.collection-active"
+      );
+      if (activeLink) {
+        activeLink.focus();
+        return;
+      }
+
+      const links = scrollableContainer.querySelectorAll("a");
+
+      links.forEach((link, index) => {
+        if (index === 0) {
+          link.focus();
+          link.classList.add("collection-active");
+        } else {
+          link.classList.remove("collection-active");
+        }
+      });
+    });
+
+    scrollableContainer.addEventListener("keydown", (event) => {
+      if (event.isComposing) {
+        return;
+      }
+      if (document.activeElement.nodeName !== "A") {
+        return;
+      }
+
+      const activeLink = scrollableContainer.querySelector(
+        "a.collection-active"
+      );
+      if (!activeLink) {
+        return;
+      }
+
+      if (event.code === "Enter") {
+        activeLink.click();
+        return;
+      }
+
+      const links = Array.from(
+        scrollableContainer.querySelectorAll("a")
+      );
+      const index = links.indexOf(activeLink);
+      if (event.code === "ArrowUp") {
+        event.preventDefault();
+        const newIndex = index > 0 ? index - 1 : links.length - 1;
+        const target = links[newIndex];
+        target.focus();
+        target.classList.add("collection-active");
+        links[index].classList.remove("collection-active");
+        target.scrollIntoView({ block: "nearest" });
+      } else if (event.code === "ArrowDown") {
+        event.preventDefault();
+        const newIndex = index < links.length - 1 ? index + 1 : 0;
+        const target = links[newIndex];
+        target.focus();
+        target.classList.add("collection-active");
+        links[index].classList.remove("collection-active");
+        target.scrollIntoView({ block: "nearest" });
+      }
+    });
+  }
+
   function mainObserver(mutations) {
     mutations.forEach((mutation) => {
       mutation.addedNodes.forEach((node) => {
@@ -1469,397 +1864,20 @@
 
           // ライブラリページのショートカット
           if (location.pathname === LIBRARY_PATHNAME) {
-            function activeLinkHandler(event, scrollCenter = false) {
-              if (event.isComposing) {
-                return;
-              }
-              if (libraryLinks.activeIndex === -1) {
-                return;
-              }
-
-              if (event.code === "Enter") {
-                libraryLinks.links[libraryLinks.activeIndex].click();
-                return;
-              }
-
-              if (["ArrowUp", "ArrowDown"].includes(event.code)) {
-                event.preventDefault();
-                const currentLink =
-                  libraryLinks.links[libraryLinks.activeIndex];
-                if (currentLink) {
-                  currentLink.classList.remove("search-result-active");
-                  currentLink.removeAttribute("data-page-end");
-                }
-
-                if (event.code === "ArrowUp") {
-                  libraryLinks.activeIndex =
-                    libraryLinks.activeIndex > 0
-                      ? libraryLinks.activeIndex - 1
-                      : libraryLinks.activeIndex;
-                } else if (event.code === "ArrowDown") {
-                  libraryLinks.activeIndex =
-                    libraryLinks.activeIndex < libraryLinks.links.length - 1
-                      ? libraryLinks.activeIndex + 1
-                      : libraryLinks.activeIndex;
-                }
-
-                const nextLink = libraryLinks.links[libraryLinks.activeIndex];
-
-                nextLink.classList.add("search-result-active");
-
-                // スクロール
-                if (scrollCenter) {
-                  nextLink.scrollIntoView({
-                    block: "center",
-                  });
-                } else {
-                  nextLink.scrollIntoView({
-                    block: "nearest",
-                  });
-                }
-                const scrollContainer = libraryLinks.links[
-                  libraryLinks.activeIndex
-                ].closest(".scrollable-container");
-                if (scrollContainer) {
-                  if (
-                    libraryLinks.activeIndex ===
-                    libraryLinks.links.length - 1
-                  ) {
-                    scrollContainer.scrollTop = scrollContainer.scrollHeight;
-                    nextLink.dataset.pageEnd = true;
-                  } else if (libraryLinks.activeIndex === 0) {
-                    scrollContainer.scrollTop = 0;
-                  }
-                }
-              }
-            }
-
-            const inputs = parent.querySelectorAll("input");
-            inputs.forEach((input) => {
-              // input要素にフォーカスした際に、イベントトリガーを追加
-
-              // 親要素が非表示の場合
-              let doNotFocus = false;
-              let ele = input;
-              while (ele) {
-                if (window.getComputedStyle(ele).display === "none") {
-                  doNotFocus = true;
-                }
-                ele = ele.parentElement;
-              }
-
-              if (!doNotFocus && document.activeElement !== input) {
-                input.focus();
-              }
-
-              // ナビゲーションが無効の場合、イベントハンドラーの設定はしない
-              if (!config.navigation) {
-                return;
-              }
-
-              if (input.dataset.searchEventAdded) {
-                return;
-              }
-
-              if (input.closest(".md\\:hidden")) {
-                input.addEventListener(
-                  "keydown",
-                  (event) => {
-                    activeLinkHandler(event, true);
-                  },
-                  true
-                );
-              } else {
-                input.addEventListener("keydown", activeLinkHandler, true);
-              }
-              input.dataset.searchEventAdded = true;
-
-              const isOuter = (current) => {
-                return (
-                  current.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`) &&
-                  current.classList.contains("w-full")
-                );
-              };
-
-              let outer;
-              let current = input;
-              while (current) {
-                if (isOuter(current)) {
-                  outer = current;
-                  break;
-                }
-                current = current.parentElement;
-              }
-
-              const setObserver = () => {
-                // outerに変更があった場合、targetLinksを初期化する
-                const observer = new MutationObserver(async (mutations) => {
-                  if (location.pathname !== LIBRARY_PATHNAME) {
-                    observer.disconnect();
-                    return;
-                  }
-
-                  if (!outer) {
-                    return;
-                  }
-
-                  mutations.forEach((mutation) => {
-                    if (mutation.type === "childList") {
-                      timerManager.debounce("searchLinks", 50, () => {
-                        libraryLinks.init(outer);
-                      });
-                    }
-                  });
-                });
-                observer.observe(outer, {
-                  childList: true,
-                  subtree: true,
-                  characterData: true,
-                });
-              };
-
-              if (!outer) {
-                // 親要素が見つからない場合、MutationObserverを使用して監視する
-                const observer = new MutationObserver(async (mutations) => {
-                  if (location.pathname !== LIBRARY_PATHNAME) {
-                    observer.disconnect();
-                    return;
-                  }
-
-                  let current = input;
-                  while (current) {
-                    if (isOuter(current)) {
-                      outer = current;
-                      break;
-                    }
-                    current = current.parentElement;
-                  }
-
-                  if (!outer) {
-                    return;
-                  }
-                  libraryLinks.init(outer);
-                  setObserver();
-                  observer.disconnect();
-                });
-                observer.observe(document.body, {
-                  childList: true,
-                  subtree: true,
-                  characterData: true,
-                });
-
-                return;
-              } else {
-                libraryLinks.init(outer);
-                setObserver();
-              }
-            });
-
+            setLibraryEventListeners(parent);
             return;
           }
 
           // スペース選択のショートカット
           if (location.pathname === SPACES_PATHNAME) {
-            // ナビゲーションが無効の場合、イベントハンドラーの設定はしない
-            if (!config.navigation) {
-              return;
-            }
-
-            if (document.querySelector(".space-selection-active")) {
-              return;
-            }
-
-            const targetItem = document.querySelector(".contents a");
-            if (!targetItem) {
-              return;
-            }
-            targetItem.classList.add("space-selection-active");
-
-            if (document.body.dataset.spacesEventAdded) {
-              return;
-            }
-
-            document.body.dataset.spacesEventAdded = true;
-            document.body.addEventListener(
-              "keydown",
-              (event) => {
-                if (location.pathname !== SPACES_PATHNAME) {
-                  return;
-                }
-                if (event.isComposing) {
-                  return;
-                }
-                if (document.body.querySelector("body > div div.fixed")) {
-                  // ポップアップが表示されている場合は何もしない
-                  return;
-                }
-
-                const tmp = document.querySelector(".contents a");
-                if (!tmp) {
-                  return;
-                }
-
-                const spacesParent = tmp.parentElement;
-                const items = spacesParent.querySelectorAll("a");
-                let targetItem = spacesParent.querySelector(
-                  "a.space-selection-active"
-                );
-                if (!targetItem) {
-                  targetItem = items[0];
-                  targetItem.classList.add("space-selection-active");
-                }
-
-                if (event.code === "Enter") {
-                  event.preventDefault();
-                  targetItem.click();
-                  return;
-                }
-
-                // 折り返し要素数を取得する
-                // a要素はカードスタイルで画面サイズに応じて折り返しが発生するので、
-                // 画面上の絶対位置が前要素より左位置になったところで折り返し要素数とする
-                let wrapCount = 0;
-                for (let i = 1; i < items.length; i++) {
-                  if (
-                    items[i].getBoundingClientRect().left <
-                    items[i - 1].getBoundingClientRect().left
-                  ) {
-                    wrapCount = i + 1;
-                    break;
-                  }
-                }
-
-                if (event.code === "ArrowLeft") {
-                  event.preventDefault();
-                  targetItem.classList.remove("space-selection-active");
-                  targetItem =
-                    items[
-                      (Array.from(items).indexOf(targetItem) -
-                        1 +
-                        items.length) %
-                        items.length
-                    ];
-                  targetItem.classList.add("space-selection-active");
-                  targetItem.scrollIntoView({ block: "nearest" });
-                } else if (event.code === "ArrowRight") {
-                  event.preventDefault();
-                  targetItem.classList.remove("space-selection-active");
-                  targetItem =
-                    items[
-                      (Array.from(items).indexOf(targetItem) + 1) % items.length
-                    ];
-                  targetItem.classList.add("space-selection-active");
-                  targetItem.scrollIntoView({ block: "nearest" });
-                } else if (event.code === "ArrowUp") {
-                  event.preventDefault();
-                  const currentIndex = Array.from(items).indexOf(targetItem);
-                  let index = currentIndex - wrapCount;
-                  if (index < 0) {
-                    index =
-                      currentIndex +
-                      wrapCount *
-                        Math.floor(
-                          (items.length - (currentIndex + 1)) / wrapCount
-                        );
-                  }
-                  targetItem.classList.remove("space-selection-active");
-                  targetItem = items[index];
-                  targetItem.classList.add("space-selection-active");
-                  targetItem.scrollIntoView({ block: "nearest" });
-                } else if (event.code === "ArrowDown") {
-                  event.preventDefault();
-                  const currentIndex = Array.from(items).indexOf(targetItem);
-                  let index = currentIndex + wrapCount;
-                  if (index >= items.length) {
-                    index = currentIndex % wrapCount;
-                  }
-                  targetItem.classList.remove("space-selection-active");
-                  targetItem = items[index];
-                  targetItem.classList.add("space-selection-active");
-                  targetItem.scrollIntoView({ block: "nearest" });
-                }
-              },
-              true
-            );
+            setSpacesEventListeners();
+            return;
           }
 
           // スペース個別画面のショートカット
           if (location.pathname.startsWith(SPACE_DETAIL_PATHNAME)) {
-            const scrollableContainer = parent.querySelector(
-              ".scrollable-container"
-            );
-            if (!scrollableContainer) {
-              return;
-            }
-
-            if (scrollableContainer.dataset.spaceDetailEventAdded) {
-              return;
-            }
-            scrollableContainer.dataset.spaceDetailEventAdded = true;
-
-            scrollableContainer.addEventListener("focus", (event) => {
-              const activeLink = scrollableContainer.querySelector(
-                "a.collection-active"
-              );
-              if (activeLink) {
-                activeLink.focus();
-                return;
-              }
-
-              const links = scrollableContainer.querySelectorAll("a");
-
-              links.forEach((link, index) => {
-                if (index === 0) {
-                  link.focus();
-                  link.classList.add("collection-active");
-                } else {
-                  link.classList.remove("collection-active");
-                }
-              });
-            });
-
-            scrollableContainer.addEventListener("keydown", (event) => {
-              if (event.isComposing) {
-                return;
-              }
-              if (document.activeElement.nodeName !== "A") {
-                return;
-              }
-
-              const activeLink = scrollableContainer.querySelector(
-                "a.collection-active"
-              );
-              if (!activeLink) {
-                return;
-              }
-
-              if (event.code === "Enter") {
-                activeLink.click();
-                return;
-              }
-
-              const links = Array.from(
-                scrollableContainer.querySelectorAll("a")
-              );
-              const index = links.indexOf(activeLink);
-              if (event.code === "ArrowUp") {
-                event.preventDefault();
-                const newIndex = index > 0 ? index - 1 : links.length - 1;
-                const target = links[newIndex];
-                target.focus();
-                target.classList.add("collection-active");
-                links[index].classList.remove("collection-active");
-                target.scrollIntoView({ block: "nearest" });
-              } else if (event.code === "ArrowDown") {
-                event.preventDefault();
-                const newIndex = index < links.length - 1 ? index + 1 : 0;
-                const target = links[newIndex];
-                target.focus();
-                target.classList.add("collection-active");
-                links[index].classList.remove("collection-active");
-                target.scrollIntoView({ block: "nearest" });
-              }
-            });
+            setSpaceDetailEventListeners(parent);
+            return;
           }
 
           // 追加された textarea 要素へのイベントリスナー
