@@ -2,6 +2,7 @@
   const MODEL_SELECT_AREA_ITEM_SELECTOR = "div.group\\/item";
   const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = ".text-super";
   const MAIN_TEXTAREA_SELECTOR = "main div:has(#ask-input):has(button)";
+  const TOP_EDITABLE_DIV_ID = "ask-input";
 
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = MODEL_SELECT_AREA_ITEM_SELECTOR;
 
@@ -656,7 +657,7 @@
   }
 
   async function toggleWebInSearchSource() {
-    const mainSearchBox = document.querySelector("main textarea");
+    const mainSearchBox = document.getElementById(TOP_EDITABLE_DIV_ID);
     if (!mainSearchBox) {
       return;
     }
@@ -1253,7 +1254,7 @@
 
           // HACK: IME入力時にEnterが反応しなくなることがある事象への対処
           if (location.pathname === "/") {
-            const askInput = document.getElementById("ask-input");
+            const askInput = document.getElementById(TOP_EDITABLE_DIV_ID);
             if (askInput && !askInput.dataset.askInputEventAdded) {
               askInput.addEventListener("keydown", (event) => {
                 if (event.code === "Enter" && !event.shiftKey) {
@@ -1406,7 +1407,6 @@
       );
     }
 
-    // Markdown編集機能を追加
     // ページ読み込み時と、DOM変更時に対応する
     const textareas = document.querySelectorAll(
       "main textarea:not([data-pmt-custom-event])"
