@@ -1851,7 +1851,7 @@
             const askInput = document.getElementById("ask-input");
             if (askInput && !askInput.dataset.askInputEventAdded) {
               askInput.addEventListener("keydown", (event) => {
-                if (event.code === "Enter") {
+                if (event.code === "Enter" && !event.shiftKey) {
                   if (event.isComposing) {
                     return;
                   }
