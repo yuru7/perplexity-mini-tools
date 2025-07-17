@@ -42,7 +42,10 @@
 
     // TOC本体（ホバー時に表示）
     const tocBody = document.createElement("div");
-    tocBody.className = "toc-body";
+    tocBody.classList.add(
+      "toc-body",
+      "scrollbar-subtle" // HACK: Perplexityのスクロールバーのスタイルを適用
+    );
 
     // ホバーイベント
     tocContainer.addEventListener("mouseenter", () => {
@@ -99,8 +102,8 @@
       textContent = element.textContent.trim();
     }
     item.textContent =
-      textContent.length > 150
-        ? textContent.substring(0, 150) + "..."
+      textContent.length > 170
+        ? textContent.substring(0, 170) + "..."
         : textContent;
     item.dataset.index = index;
     indicatorPoint.dataset.index = index;
