@@ -386,9 +386,14 @@
       if (!window.location.pathname.startsWith(SEARCH_PATHNAME)) {
         return;
       }
-      const spaceLink = document.querySelector(
-        `.\\@container\\/main a[href^="${SPACE_DETAIL_PATHNAME}"]`
+      let spaceLink = document.querySelector(
+        `.\\@container\\/main a[href^="${SPACES_PATHNAME}"]`
       );
+      if (!spaceLink) {
+        spaceLink = document.querySelector(
+          `.\\@container\\/main a[href^="${SPACE_DETAIL_PATHNAME}"]`
+        );
+      }
       if (spaceLink) {
         showLoadingIndicator();
         spaceLink.click();
