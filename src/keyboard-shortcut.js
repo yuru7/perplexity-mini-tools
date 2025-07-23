@@ -1258,7 +1258,10 @@
           }
 
           // HACK: IME入力時にEnterが反応しなくなることがある事象への対処
-          if (location.pathname === "/") {
+          const isSearchPage =
+            location.pathname === "/" ||
+            location.pathname.startsWith(SEARCH_PATHNAME);
+          if (isSearchPage) {
             const askInput = document.getElementById(TOP_EDITABLE_DIV_ID);
             if (askInput && !askInput.dataset.askInputEventAdded) {
               askInput.addEventListener("keydown", (event) => {
@@ -1270,13 +1273,18 @@
                     return;
                   }
                   setTimeout(() => {
-                    if (location.pathname !== "/") {
+                    if (!isSearchPage) {
+                      return;
+                    }
+                    if (askInput.textContent.trim() === "") {
                       return;
                     }
                     const submitButton = document.querySelector(
                       'button[data-testid="submit-button"]'
                     );
-                    submitButton.click();
+                    if (submitButton) {
+                      submitButton.click();
+                    }
                   }, 500);
                 }
               });
