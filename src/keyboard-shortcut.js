@@ -1258,40 +1258,41 @@
           }
 
           // HACK: IME入力時にEnterが反応しなくなることがある事象への対処
-          const isSearchPage =
-            location.pathname === "/" ||
-            location.pathname.startsWith(SEARCH_PATHNAME);
-          if (isSearchPage) {
-            const askInput = document.getElementById(TOP_EDITABLE_DIV_ID);
-            if (askInput && !askInput.dataset.askInputEventAdded) {
-              askInput.addEventListener("keydown", (event) => {
-                if (event.code === "Enter" && !event.shiftKey) {
-                  if (event.isComposing) {
-                    return;
-                  }
-                  if (askInput.textContent.trim() === "") {
-                    return;
-                  }
-                  setTimeout(() => {
-                    if (!isSearchPage) {
-                      return;
-                    }
-                    if (askInput.textContent.trim() === "") {
-                      return;
-                    }
-                    const submitButton = document.querySelector(
-                      'button[data-testid="submit-button"]'
-                    );
-                    if (submitButton) {
-                      submitButton.click();
-                    }
-                  }, 500);
-                }
-              });
-              askInput.dataset.askInputEventAdded = true;
-            }
-            return;
-          }
+          // 2025-07-30 直ったように見えるのでコメントアウト
+          // const isSearchPage =
+          //   location.pathname === "/" ||
+          //   location.pathname.startsWith(SEARCH_PATHNAME);
+          // if (isSearchPage) {
+          //   const askInput = document.getElementById(TOP_EDITABLE_DIV_ID);
+          //   if (askInput && !askInput.dataset.askInputEventAdded) {
+          //     askInput.addEventListener("keydown", (event) => {
+          //       if (event.code === "Enter" && !event.shiftKey) {
+          //         if (event.isComposing) {
+          //           return;
+          //         }
+          //         if (askInput.textContent.trim() === "") {
+          //           return;
+          //         }
+          //         setTimeout(() => {
+          //           if (!isSearchPage) {
+          //             return;
+          //           }
+          //           if (askInput.textContent.trim() === "") {
+          //             return;
+          //           }
+          //           const submitButton = document.querySelector(
+          //             'button[data-testid="submit-button"]'
+          //           );
+          //           if (submitButton) {
+          //             submitButton.click();
+          //           }
+          //         }, 500);
+          //       }
+          //     });
+          //     askInput.dataset.askInputEventAdded = true;
+          //   }
+          //   return;
+          // }
 
           // ライブラリページのショートカット
           if (location.pathname === LIBRARY_PATHNAME) {
