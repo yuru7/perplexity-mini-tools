@@ -837,6 +837,7 @@
             const text = textarea.textContent;
             // スクロール移動
             if (
+              !event.shiftKey &&
               ["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(
                 event.code
               ) &&
@@ -865,6 +866,39 @@
         true
       );
     }
+
+    // Perplexity Mini Tools の TOC の操作
+    textarea.addEventListener(
+      "keydown",
+      (event) => {
+        if (
+          event.shiftKey &&
+          (event.code === "ArrowUp" || event.code === "ArrowDown") &&
+          textarea.textContent.length === 0
+        ) {
+          const toc = document.getElementById("toc-container");
+          if (!toc) {
+            return;
+          }
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          const tocItems = toc.querySelectorAll(".indicator-point");
+          if (tocItems.length === 0) {
+            return;
+          }
+          const activeItem = toc.querySelector(".indicator-point.active");
+          if (!activeItem) {
+            return;
+          }
+          const currentIndex = Array.from(tocItems).indexOf(activeItem);
+          let index = currentIndex + (event.code === "ArrowDown" ? 1 : -1);
+          if (index >= 0 && index < tocItems.length) {
+            tocItems[index].click();
+          }
+        }
+      },
+      true
+    );
   }
 
   function sleep(ms) {
