@@ -867,6 +867,31 @@
       );
     }
 
+    // トップページの場合
+    if (location.pathname === "/") {
+      textarea.addEventListener(
+        "keydown",
+        (event) => {
+          if (
+            (event.code === "ArrowUp" || event.code === "ArrowDown") &&
+            textarea.innerText.includes("\n")
+          ) {
+            // 改行が含まれている場合、サジェスト選択を無効化
+            event.stopImmediatePropagation();
+          } else if (
+            event.shiftKey &&
+            event.code === "Enter" &&
+            !textarea.innerText.includes("\n")
+          ) {
+            // 最初の改行操作の際、サジェスト選択状態をリセットする
+            textarea.blur();
+            textarea.focus();
+          }
+        },
+        true
+      );
+    }
+
     // Perplexity Mini Tools の TOC の操作
     textarea.addEventListener(
       "keydown",
