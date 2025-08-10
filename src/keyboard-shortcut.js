@@ -759,51 +759,52 @@
 
     textareaSelectionManager.reset();
 
-    // Ctrl+V の際にカーソルが末尾にジャンプする不具合を予防
-    // 貼り付け形式がテキストの場合、標準のイベントリスナーには処理をさせない
-    textarea.addEventListener(
-      "paste",
-      (event) => {
-        if (!event.clipboardData.types.includes("text/plain")) {
-          return;
-        }
-        event.stopImmediatePropagation();
-      },
-      true
-    );
+    // TODO 2025-08-10 一旦除外
+    // // Ctrl+V の際にカーソルが末尾にジャンプする不具合を予防
+    // // 貼り付け形式がテキストの場合、標準のイベントリスナーには処理をさせない
+    // textarea.addEventListener(
+    //   "paste",
+    //   (event) => {
+    //     if (!event.clipboardData.types.includes("text/plain")) {
+    //       return;
+    //     }
+    //     event.stopImmediatePropagation();
+    //   },
+    //   true
+    // );
     // フォーカスアウト & イン時にカーソル位置が移動する不具合を予防
-    let focusByMouse = false;
-    textarea.addEventListener(
-      "mousedown",
-      () => {
-        focusByMouse = true;
-      },
-      true
-    );
-    textarea.addEventListener(
-      "focusout",
-      () => {
-        textareaSelectionManager.setPosWhenTextareaActive();
-        focusByMouse = false;
-      },
-      true
-    );
-    textarea.addEventListener("focusin", async () => {
-      if (!focusByMouse && textareaSelectionManager.textarea) {
-        await sleep(50);
-        const pos = textareaSelectionManager.getPos();
-        if (
-          textarea.selectionStart !== pos.start &&
-          textarea.selectionEnd !== pos.end
-        ) {
-          textareaSelectionManager.applyPosToTextarea();
-        }
-      }
-      if (textareaSelectionManager.textarea) {
-        textareaSelectionManager.reset();
-      }
-      focusByMouse = false;
-    });
+    // let focusByMouse = false;
+    // textarea.addEventListener(
+    //   "mousedown",
+    //   () => {
+    //     focusByMouse = true;
+    //   },
+    //   true
+    // );
+    // textarea.addEventListener(
+    //   "focusout",
+    //   () => {
+    //     textareaSelectionManager.setPosWhenTextareaActive();
+    //     focusByMouse = false;
+    //   },
+    //   true
+    // );
+    // textarea.addEventListener("focusin", async () => {
+    //   if (!focusByMouse && textareaSelectionManager.textarea) {
+    //     await sleep(50);
+    //     const pos = textareaSelectionManager.getPos();
+    //     if (
+    //       textarea.selectionStart !== pos.start &&
+    //       textarea.selectionEnd !== pos.end
+    //     ) {
+    //       textareaSelectionManager.applyPosToTextarea();
+    //     }
+    //   }
+    //   if (textareaSelectionManager.textarea) {
+    //     textareaSelectionManager.reset();
+    //   }
+    //   focusByMouse = false;
+    // });
 
     let scrolling = false;
     const scrollTarget = textarea.closest(".scrollable-container");
@@ -833,12 +834,13 @@
             if (event.isComposing) {
               return;
             }
+            const text = textarea.textContent;
             // スクロール移動
             if (
               ["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(
                 event.code
               ) &&
-              textarea.value.length === 0
+              text.length === 0
             ) {
               event.stopImmediatePropagation();
               scrolling = true;
@@ -1313,12 +1315,12 @@
           }
 
           // 追加された textarea 要素へのイベントリスナー
-          const textareas = parent.querySelectorAll(
-            "textarea:not([data-pmt-custom-event])"
+          const textarea = parent.querySelector(
+            `#${TOP_EDITABLE_DIV_ID}:not([data-pmt-custom-event])`
           );
-          textareas.forEach((textarea) => {
+          if (textarea) {
             setTextareaEventListeners(textarea);
-          });
+          }
 
           const copySvg = parent.querySelectorAll("svg.tabler-icon-copy");
           const copyButtons = [];
@@ -1422,12 +1424,12 @@
     }
 
     // ページ読み込み時と、DOM変更時に対応する
-    const textareas = document.querySelectorAll(
-      "main textarea:not([data-pmt-custom-event])"
+    const textarea = document.querySelector(
+      `#${TOP_EDITABLE_DIV_ID}:not([data-pmt-custom-event])`
     );
-    textareas.forEach((textarea) => {
+    if (textarea) {
       setTextareaEventListeners(textarea);
-    }, true);
+    }
 
     // DOM変更時の対応をする
     const observer = new MutationObserver(mainObserver);
