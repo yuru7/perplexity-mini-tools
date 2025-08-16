@@ -898,32 +898,41 @@
       (event) => {
         if (
           event.shiftKey &&
-          (event.code === "ArrowUp" || event.code === "ArrowDown") &&
-          textarea.textContent.length === 0
+          (event.code === "ArrowUp" || event.code === "ArrowDown")
         ) {
-          const toc = document.getElementById("toc-container");
-          if (!toc) {
-            return;
-          }
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          const tocItems = toc.querySelectorAll(".indicator-point");
-          if (tocItems.length === 0) {
-            return;
-          }
-          const activeItem = toc.querySelector(".indicator-point.active");
-          if (!activeItem) {
-            return;
-          }
-          const currentIndex = Array.from(tocItems).indexOf(activeItem);
-          let index = currentIndex + (event.code === "ArrowDown" ? 1 : -1);
-          if (index >= 0 && index < tocItems.length) {
-            tocItems[index].click();
+          if (textarea.textContent.length === 0) {
+            tocHandler(event);
+          } else {
+            // document.body に対してイベントを設定しているので、
+            // デフォルトのイベントを停止する
+            event.stopImmediatePropagation();
           }
         }
       },
       true
     );
+  }
+
+  function tocHandler(event) {
+    const toc = document.getElementById("toc-container");
+    if (!toc) {
+      return;
+    }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const tocItems = toc.querySelectorAll(".indicator-point");
+    if (tocItems.length === 0) {
+      return;
+    }
+    const activeItem = toc.querySelector(".indicator-point.active");
+    if (!activeItem) {
+      return;
+    }
+    const currentIndex = Array.from(tocItems).indexOf(activeItem);
+    let index = currentIndex + (event.code === "ArrowDown" ? 1 : -1);
+    if (index >= 0 && index < tocItems.length) {
+      tocItems[index].click();
+    }
   }
 
   function sleep(ms) {
@@ -1481,6 +1490,16 @@
         true
       );
     }
+
+    // Perplexity Mini Tools の TOC の操作
+    document.addEventListener("keydown", (event) => {
+      if (
+        event.shiftKey &&
+        (event.code === "ArrowUp" || event.code === "ArrowDown")
+      ) {
+        tocHandler(event);
+      }
+    });
 
     // ページ読み込み時と、DOM変更時に対応する
     const textarea = document.querySelector(
