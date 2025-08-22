@@ -1424,8 +1424,12 @@
                     /(\r?\nCitations:\r?\n\[1\][\s\S]+)?---\r?\n[^\r\n]+$/,
                     ""
                   ) // Citations: ... 形式
-                  .replace(/\r?\n(\[[0-9]+\] https?:\/\/[^\s]+(\r?\n)?)+$/, "") // Citations: ... 形式ではなくなったので追加対応 2025-06-03
-                  .replace(/\[[0-9]+\]/g, "")
+                  .replace(/\r?\n(\[[0-9]+\] https?:\/\/[^\s]+(\r?\n)?)+$/, "") // Perplexity側の形式変更に伴い追加対応 2025-06-03
+                  .replace(
+                    /\r?\n(\[[0-9]+\]\(https?:\/\/[^\s]+\)(\r?\n)?)+$/,
+                    ""
+                  ) // Perplexity側の形式変更に伴い追加対応 2025-08-22
+                  .replace(/\[[0-9]+\]/g, "") // 引用番号部分を削除
                   .trim();
                 // clipboardにコピー
                 navigator.clipboard
