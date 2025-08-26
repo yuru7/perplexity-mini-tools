@@ -1,6 +1,6 @@
 (() => {
   const MODEL_SELECT_AREA_ITEM_SELECTOR = "div.group\\/item";
-  const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = ".text-super";
+  const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = ".tabler-icon-check";
   const MAIN_TEXTAREA_SELECTOR = "main div:has(#ask-input):has(button)";
   const TOP_EDITABLE_DIV_ID = "ask-input";
 
@@ -14,9 +14,11 @@
 
   const UP = 0;
   const DOWN = 1;
+  const SELECT_SEARCH_MODE = 1;
+  const SELECT_AI_MODEL = 2;
 
   const MODEL_SELECT_BUTTON_POS = 3;
-  const SEARCH_SOURCE_BUTTON_POS = 4;
+  const SEARCH_SOURCE_BUTTON_POS = 1;
 
   const libraryLinks = {
     activeIndex: -1,
@@ -232,25 +234,25 @@
     if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "ArrowUp") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(UP);
+      selectSearchMode(UP, SELECT_SEARCH_MODE);
       return;
     }
     if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "ArrowDown") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(DOWN);
+      selectSearchMode(DOWN, SELECT_SEARCH_MODE);
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowUp") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(UP, MODEL_SELECT_BUTTON_POS);
+      selectSearchMode(UP, SELECT_AI_MODEL);
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowDown") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(DOWN, MODEL_SELECT_BUTTON_POS);
+      selectSearchMode(DOWN, SELECT_AI_MODEL);
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "Period") {
@@ -435,34 +437,6 @@
     }
   }
 
-  const textareaSelectionManager = {
-    pos: -1,
-    textarea: null,
-    setPosWhenTextareaActive: function () {
-      const activeElement = document.activeElement;
-      if (activeElement.tagName === "TEXTAREA") {
-        this.posStart = activeElement.selectionStart;
-        this.posEnd = activeElement.selectionEnd;
-        this.textarea = activeElement;
-      }
-    },
-    getPos: function () {
-      return {
-        start: this.posStart,
-        end: this.posEnd,
-      };
-    },
-    applyPosToTextarea: function () {
-      if (this.textarea) {
-        this.textarea.setSelectionRange(this.posStart, this.posEnd);
-      }
-    },
-    reset: function () {
-      this.pos = -1;
-      this.textarea = null;
-    },
-  };
-
   function isDeepResearchOrLabs(buttons) {
     return (
       buttons[1].dataset.state === "checked" ||
@@ -486,106 +460,91 @@
     return parent.querySelectorAll("button");
   }
 
-  async function selectSearchMode(upOrDown, buttonIndex = 0) {
+  async function selectSearchMode(upOrDown, searchMode) {
     // buttonIndex = 0 の場合、「検索」と「リサーチ」の切り替えを行う
-
-    // textarea がアクティブな場合、カーソル位置を取得
-    const isTextareaActive = document.activeElement.tagName === "TEXTAREA";
-    if (isTextareaActive) {
-      textareaSelectionManager.setPosWhenTextareaActive();
-    }
 
     // textarea を囲む span の下から検索する
     const mainSearchBox = getDeepestMainTextarea();
-    let buttons, button;
-    if (mainSearchBox) {
-      buttons = getSearchBoxButtons(mainSearchBox);
-      button =
-        buttonIndex < 0
-          ? buttons[buttons.length + buttonIndex]
-          : buttons[buttonIndex];
-    }
-
-    if (!button) {
+    if (!mainSearchBox || mainSearchBox.children.length !== 3) {
       return;
     }
 
     // Pro, DeepResearch, Labs ボタンの切り替え動作が指定されている場合
-    if (buttonIndex == 0) {
-      const index = getSearchModeIndex(buttons);
+    const searchModeButtons =
+      mainSearchBox.children[1].querySelectorAll("button");
+    if (searchMode === SELECT_SEARCH_MODE) {
+      const index = getSearchModeIndex(searchModeButtons);
       if (index < 0) {
         return;
       }
       if (upOrDown === UP) {
         if (index === 0) {
-          buttons[MODEL_SELECT_BUTTON_POS - 1].click();
+          searchModeButtons[MODEL_SELECT_BUTTON_POS - 1].click();
         } else {
-          buttons[index - 1].click();
+          searchModeButtons[index - 1].click();
         }
       } else {
         if (index === MODEL_SELECT_BUTTON_POS - 1) {
-          buttons[0].click();
+          searchModeButtons[0].click();
         } else {
-          buttons[index + 1].click();
+          searchModeButtons[index + 1].click();
         }
       }
       return;
     }
 
     // DeepResearch ボタンがアクティブの場合はモデル選択ボタンが表示されていないので終了
-    if (isDeepResearchOrLabs(buttons)) {
+    if (isDeepResearchOrLabs(searchModeButtons)) {
       return;
     }
 
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          try {
-            // 通常の要素以外はスキップ
-            if (node.tagName !== "DIV") {
-              return;
-            }
+    if (searchMode === SELECT_AI_MODEL) {
+      const button = mainSearchBox
+        .querySelector("svg.tabler-icon-cpu")
+        .closest("button");
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            try {
+              // 通常の要素以外はスキップ
+              if (node.tagName !== "DIV") {
+                return;
+              }
 
-            // ポップアップがちらつくのでいったん非表示にするCSSを適用
-            node.style.display = "none";
+              // ポップアップがちらつくのでいったん非表示にするCSSを適用
+              node.style.display = "none";
 
-            const modelSelectBoxChildren = node.querySelectorAll(
-              MODEL_SELECT_AREA_ITEM_SELECTOR
-            );
-            if (modelSelectBoxChildren.length === 0) {
-              return;
-            }
-            const selectModelName = clickModel(node, upOrDown);
+              const modelSelectBoxChildren = node.querySelectorAll(
+                MODEL_SELECT_AREA_ITEM_SELECTOR
+              );
+              if (modelSelectBoxChildren.length === 0) {
+                return;
+              }
+              const selectModelName = clickModel(node, upOrDown);
 
-            // ツールチップのテキストを更新
-            tooltipManager.showTooltip(selectModelName, mainSearchBox);
-
-            // textarea のカーソル位置を戻す
-            if (isTextareaActive) {
-              textareaSelectionManager.textarea.focus();
-              textareaSelectionManager.applyPosToTextarea();
-              textareaSelectionManager.reset();
+              // ツールチップのテキストを更新
+              tooltipManager.showTooltip(selectModelName, mainSearchBox);
+            } finally {
+              // ポップアップ非表示CSSを削除
+              if (node.tagName === "DIV") {
+                node.style.display = "";
+              }
             }
-          } finally {
-            // ポップアップ非表示CSSを削除
-            if (node.tagName === "DIV") {
-              node.style.display = "";
-            }
-          }
+          });
         });
+        observer.disconnect();
       });
-      observer.disconnect();
-    });
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-    // モデル選択ボタンをクリック
-    button.click();
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+      // モデル選択ボタンをクリック
+      button.click();
+    }
   }
 
   function getSelectedModelIndex(node) {
-    let checkedIndex = -1;
+    let checkedIndex = 0;
     let modelSelectBoxChildren = node.querySelectorAll(
       MODEL_SELECT_AREA_ITEM_SELECTOR
     );
@@ -620,7 +579,9 @@
     // MAXモードでしか選択できないモデルをスキップする
     let maxLoopCount = 20;
     while (maxLoopCount > 0) {
-      if (modelSelectBoxChildren[checkedIndex + add].querySelector(".bg-max")) {
+      if (
+        modelSelectBoxChildren[checkedIndex + add].querySelector(".text-max")
+      ) {
         if (
           upOrDown === UP &&
           checkedIndex === modelSelectBoxChildren.length - 1
@@ -658,30 +619,34 @@
     // 前後の要素をクリックする
     modelSelectBoxChildren[checkedIndex + add].click();
 
+    // モデル選択ポップアップが消えていない場合はテキストボックスにフォーカスを移す
+    if (!document.body.contains(modelSelectBoxChildren[0])) {
+      document.getElementById(TOP_EDITABLE_DIV_ID).focus();
+    }
+
     return modelName;
   }
 
   async function toggleWebInSearchSource() {
-    const mainSearchBox = document.getElementById(TOP_EDITABLE_DIV_ID);
-    if (!mainSearchBox) {
+    // 検索結果画面では発動させない
+    if (location.pathname.startsWith(SEARCH_PATHNAME)) {
       return;
     }
 
-    // textarea がアクティブな場合、カーソル位置を取得
-    const isTextareaActive = document.activeElement.tagName === "TEXTAREA";
-    if (isTextareaActive) {
-      textareaSelectionManager.setPosWhenTextareaActive();
+    const mainSearchBox = getDeepestMainTextarea();
+    if (!mainSearchBox || mainSearchBox.children.length !== 3) {
+      return;
     }
 
-    const buttons = mainSearchBox.closest("span").querySelectorAll("button");
-    const pos = isDeepResearchOrLabs(buttons)
+    const leftButtons = mainSearchBox.children[1].querySelectorAll("button");
+    const rightButtons = mainSearchBox.children[2].querySelectorAll("button");
+    const pos = isDeepResearchOrLabs(leftButtons)
       ? SEARCH_SOURCE_BUTTON_POS - 1
       : SEARCH_SOURCE_BUTTON_POS;
     let searchSourceButton;
-    if (buttons.length > pos) {
-      searchSourceButton = buttons[pos];
-    }
-    if (!searchSourceButton) {
+    if (rightButtons.length > pos) {
+      searchSourceButton = rightButtons[pos];
+    } else {
       return;
     }
 
@@ -731,13 +696,7 @@
             }
 
             // ポップアップを閉じる
-            mainSearchBox.focus();
-
-            // textarea のカーソル位置を戻す
-            if (isTextareaActive) {
-              textareaSelectionManager.applyPosToTextarea();
-              textareaSelectionManager.reset();
-            }
+            document.getElementById(TOP_EDITABLE_DIV_ID).focus();
           } finally {
             // ポップアップ非表示CSSを削除
             node.style.display = "";
@@ -756,8 +715,6 @@
 
   function setTextareaEventListeners(textarea) {
     textarea.dataset.pmtCustomEvent = "true";
-
-    textareaSelectionManager.reset();
 
     // TODO 2025-08-10 一旦除外
     // // Ctrl+V の際にカーソルが末尾にジャンプする不具合を予防
