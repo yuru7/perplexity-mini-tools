@@ -6,6 +6,7 @@
 
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = MODEL_SELECT_AREA_ITEM_SELECTOR;
   const AI_MODEL_SVG_SELECTOR = "svg.tabler-icon-cpu";
+  const SEARCH_SOURCE_BUTTON_SELECTOR = 'button[data-testid="sources-switcher-button"]';
 
   const LIBRARY_PATHNAME = "/library";
   const SPACES_PATHNAME = "/spaces";
@@ -642,15 +643,10 @@
       return;
     }
 
-    const leftButtons = mainSearchBox.children[1].querySelectorAll("button");
-    const rightButtons = mainSearchBox.children[2].querySelectorAll("button");
-    const pos = isDeepResearchOrLabs(leftButtons)
-      ? SEARCH_SOURCE_BUTTON_POS - 1
-      : SEARCH_SOURCE_BUTTON_POS;
-    let searchSourceButton;
-    if (rightButtons.length > pos) {
-      searchSourceButton = rightButtons[pos];
-    } else {
+    const searchSourceButton = document.querySelector(
+      SEARCH_SOURCE_BUTTON_SELECTOR
+    );
+    if (!searchSourceButton) {
       return;
     }
 
