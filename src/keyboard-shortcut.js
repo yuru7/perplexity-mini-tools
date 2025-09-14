@@ -5,6 +5,7 @@
   const TOP_EDITABLE_DIV_ID = "ask-input";
 
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = MODEL_SELECT_AREA_ITEM_SELECTOR;
+  const AI_MODEL_SVG_SELECTOR = "svg.tabler-icon-cpu";
 
   const LIBRARY_PATHNAME = "/library";
   const SPACES_PATHNAME = "/spaces";
@@ -17,7 +18,7 @@
   const SELECT_SEARCH_MODE = 1;
   const SELECT_AI_MODEL = 2;
 
-  const MODEL_SELECT_BUTTON_POS = 3;
+  const SEARCH_MODE_BUTTONS_LENGTH = 3;
   const SEARCH_SOURCE_BUTTON_POS = 1;
 
   const libraryLinks = {
@@ -304,7 +305,9 @@
       if (isDeepResearchOrLabs(buttons)) {
         return;
       }
-      const button = buttons[MODEL_SELECT_BUTTON_POS];
+      const button = document
+        .querySelector(AI_MODEL_SVG_SELECTOR)
+        .closest("button");
       if (!button) {
         return;
       }
@@ -446,7 +449,7 @@
 
   function getSearchModeIndex(buttons) {
     let index = -1;
-    for (let i = 0; i < MODEL_SELECT_BUTTON_POS; i++) {
+    for (let i = 0; i < SEARCH_MODE_BUTTONS_LENGTH; i++) {
       if (buttons[i].dataset.state === "checked") {
         index = i;
         break;
@@ -479,12 +482,12 @@
       }
       if (upOrDown === UP) {
         if (index === 0) {
-          searchModeButtons[MODEL_SELECT_BUTTON_POS - 1].click();
+          searchModeButtons[SEARCH_MODE_BUTTONS_LENGTH - 1].click();
         } else {
           searchModeButtons[index - 1].click();
         }
       } else {
-        if (index === MODEL_SELECT_BUTTON_POS - 1) {
+        if (index === SEARCH_MODE_BUTTONS_LENGTH - 1) {
           searchModeButtons[0].click();
         } else {
           searchModeButtons[index + 1].click();
@@ -500,7 +503,7 @@
 
     if (searchMode === SELECT_AI_MODEL) {
       const button = mainSearchBox
-        .querySelector("svg.tabler-icon-cpu")
+        .querySelector(AI_MODEL_SVG_SELECTOR)
         .closest("button");
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
@@ -584,13 +587,14 @@
       ) {
         if (
           upOrDown === UP &&
-          checkedIndex === modelSelectBoxChildren.length - 1
+          checkedIndex === modelSelectBoxChildren.length - 1 &&
+          add === 0
         ) {
+          // 折り返しで末尾に到達している場合の判定
           checkedIndex--;
-          add = 0;
-        } else if (upOrDown === DOWN && checkedIndex === 0) {
+        } else if (upOrDown === DOWN && checkedIndex === 0 && add === 0) {
+          // 折り返しで先頭に到達している場合の判定
           checkedIndex++;
-          add = 0;
         } else {
           checkedIndex += add * 2;
           add = 0;
