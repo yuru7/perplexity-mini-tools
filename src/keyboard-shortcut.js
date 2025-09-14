@@ -6,7 +6,8 @@
 
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = MODEL_SELECT_AREA_ITEM_SELECTOR;
   const AI_MODEL_SVG_SELECTOR = "svg.tabler-icon-cpu";
-  const SEARCH_SOURCE_BUTTON_SELECTOR = 'button[data-testid="sources-switcher-button"]';
+  const SEARCH_SOURCE_BUTTON_SELECTOR =
+    'button[data-testid="sources-switcher-button"]';
 
   const LIBRARY_PATHNAME = "/library";
   const SPACES_PATHNAME = "/spaces";
@@ -829,8 +830,10 @@
       textarea.addEventListener(
         "keydown",
         (event) => {
+          // サジェスト (オートコンプリート) 選択の改善
           if (
             (event.code === "ArrowUp" || event.code === "ArrowDown") &&
+            textarea.innerText.trim().length > 0 &&
             textarea.innerText.includes("\n")
           ) {
             // 改行が含まれている場合、サジェスト選択を無効化
