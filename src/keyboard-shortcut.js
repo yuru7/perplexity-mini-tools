@@ -529,6 +529,11 @@
 
               // ツールチップのテキストを更新
               tooltipManager.showTooltip(selectModelName, mainSearchBox);
+
+              // モデル選択ポップアップが消えていない場合はテキストボックスにフォーカスを移す
+              if (document.body.contains(modelSelectBoxChildren[0])) {
+                document.getElementById(TOP_EDITABLE_DIV_ID).focus();
+              }
             } finally {
               // ポップアップ非表示CSSを削除
               if (node.tagName === "DIV") {
