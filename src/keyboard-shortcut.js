@@ -311,7 +311,6 @@
       const button = textarea.querySelectorAll(
         AI_MODEL_BUTTON_GROUP_SELECTOR
       )[0];
-      console.log(button);
       if (!button) {
         return;
       }
