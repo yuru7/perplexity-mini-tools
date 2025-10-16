@@ -1,5 +1,6 @@
 (() => {
   const MODEL_SELECT_AREA_ITEM_SELECTOR = "div.group\\/item";
+  const MODEL_SELECT_AREA_NOT_ITEM_SELECTOR = ".group\\/switch";
   const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = ".tabler-icon";
   const MAIN_TEXTAREA_SELECTOR = "main div:has(#ask-input):has(button)";
   const TOP_EDITABLE_DIV_ID = "ask-input";
@@ -556,8 +557,12 @@
 
   function getSelectedModelIndex(node) {
     let checkedIndex = 0;
-    let modelSelectBoxChildren = node.querySelectorAll(
-      MODEL_SELECT_AREA_ITEM_SELECTOR
+    let modelSelectBoxChildren = Array.from(
+      node.querySelectorAll(MODEL_SELECT_AREA_ITEM_SELECTOR)
+    );
+    // group/switch クラスを持つ要素を含む場合はそれを除外する
+    modelSelectBoxChildren = modelSelectBoxChildren.filter(
+      (child) => !child.querySelector(MODEL_SELECT_AREA_NOT_ITEM_SELECTOR)
     );
     // チェックアイコンが表示されているアイテムを調べる
     for (let i = 0; i < modelSelectBoxChildren.length; i++) {
@@ -591,7 +596,7 @@
     let maxLoopCount = 20;
     while (maxLoopCount > 0) {
       if (
-        modelSelectBoxChildren[checkedIndex + add].querySelector(".text-max")
+        modelSelectBoxChildren[checkedIndex + add].querySelector(".border-max")
       ) {
         if (
           upOrDown === UP &&
@@ -604,10 +609,17 @@
           // 折り返しで先頭に到達している場合の判定
           checkedIndex++;
         } else {
-          checkedIndex += add * 2;
-          add = 0;
+          if (add !== 0) {
+            checkedIndex += add * 2;
+            add = 0;
+          } else if (upOrDown === UP) {
+            checkedIndex--;
+          } else if (upOrDown === DOWN) {
+            checkedIndex++;
+          }
         }
 
+        // 折り返し判定
         if (checkedIndex >= modelSelectBoxChildren.length) {
           checkedIndex = 0;
           add = 0;
