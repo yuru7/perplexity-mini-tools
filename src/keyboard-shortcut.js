@@ -1370,7 +1370,10 @@
             setTextareaEventListeners(textarea);
           }
 
-          const copySvg = parent.querySelectorAll("svg.tabler-icon-copy");
+          // コピーボタンのストローク要素を取得
+          const copySvg = parent.querySelectorAll(
+            'use[*|href="#pplx-icon-copy"]'
+          );
           const copyButtons = [];
           copySvg.forEach((svg) => {
             const button = svg.closest("button");
