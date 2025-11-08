@@ -1,7 +1,7 @@
 (() => {
   const MODEL_SELECT_AREA_ITEM_SELECTOR = "div.group\\/item";
-  const MODEL_SELECT_AREA_NOT_ITEM_SELECTOR = ".group\\/switch";
-  const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = ".tabler-icon";
+  const MODEL_SELECT_AREA_NOT_ITEM_SELECTOR = "button.group\\/switch:disabled";
+  const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = ".text-super";
   const MAIN_TEXTAREA_SELECTOR = "main div:has(#ask-input):has(button)";
   const TOP_EDITABLE_DIV_ID = "ask-input";
 
@@ -565,10 +565,12 @@
       (child) => !child.querySelector(MODEL_SELECT_AREA_NOT_ITEM_SELECTOR)
     );
     // チェックアイコンが表示されているアイテムを調べる
-    for (let i = 0; i < modelSelectBoxChildren.length; i++) {
-      const checked = modelSelectBoxChildren[i].querySelector(
-        MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR
-      );
+    for (let i = modelSelectBoxChildren.length - 1; i >= 0; i--) {
+      const checked =
+        modelSelectBoxChildren[i].querySelector(
+          MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR
+        ) ||
+        modelSelectBoxChildren[i].querySelector('div[data-state="checked"]');
       if (checked && window.getComputedStyle(checked).opacity > 0) {
         checkedIndex = i;
         break;
