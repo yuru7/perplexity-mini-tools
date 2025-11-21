@@ -568,9 +568,11 @@
     for (let i = modelSelectBoxChildren.length - 1; i >= 0; i--) {
       const checked =
         modelSelectBoxChildren[i].querySelector(
-          MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR
+          'button[data-state="checked"]'
         ) ||
-        modelSelectBoxChildren[i].querySelector('div[data-state="checked"]');
+        modelSelectBoxChildren[i].querySelector(
+          'svg:has(use[*|href="#pplx-icon-check"])'
+        );
       if (checked && window.getComputedStyle(checked).opacity > 0) {
         checkedIndex = i;
         break;
@@ -635,15 +637,23 @@
       maxLoopCount--;
     }
 
-    const modelName = modelSelectBoxChildren[checkedIndex + add].querySelector(
-      "span"
-    )
-      ? modelSelectBoxChildren[checkedIndex + add].querySelector("span")
-          .textContent
-      : modelSelectBoxChildren[checkedIndex + add].textContent;
+    const clickTarget = modelSelectBoxChildren[checkedIndex + add];
+
+    // モデル名を取得
+    let modelName = clickTarget.querySelector("span")
+      ? clickTarget.querySelector("span").textContent
+      : clickTarget.textContent;
+
+    // 対象がトグルボタンの場合は、1つ前の要素とテキストを結合する
+    if (clickTarget.querySelector("button.group\\/switch")) {
+      modelName =
+        modelSelectBoxChildren[checkedIndex + add - 1].textContent.trim() +
+        " " +
+        modelName;
+    }
 
     // 前後の要素をクリックする
-    modelSelectBoxChildren[checkedIndex + add].click();
+    clickTarget.click();
 
     // モデル選択ポップアップが消えていない場合はテキストボックスにフォーカスを移す
     if (!document.body.contains(modelSelectBoxChildren[0])) {
