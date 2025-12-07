@@ -6,8 +6,7 @@
   const TOP_EDITABLE_DIV_ID = "ask-input";
 
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = MODEL_SELECT_AREA_ITEM_SELECTOR;
-  const AI_MODEL_BUTTON_GROUP_SELECTOR =
-    "button.group\\/button:not([data-testid])"; // 同じclass名を持った要素が複数あるので、それは呼出時に調整する
+  const AI_MODEL_BUTTON_SELECTOR = 'button:has(use[*|href="#pplx-icon-cpu"])';
   const SEARCH_SOURCE_BUTTON_SELECTOR =
     'button[data-testid="sources-switcher-button"]';
 
@@ -309,9 +308,7 @@
       if (isDeepResearchOrLabs(buttons)) {
         return;
       }
-      const button = textarea.querySelectorAll(
-        AI_MODEL_BUTTON_GROUP_SELECTOR
-      )[0];
+      const button = textarea.querySelector(AI_MODEL_BUTTON_SELECTOR);
       if (!button) {
         return;
       }
@@ -506,9 +503,14 @@
     }
 
     if (searchMode === SELECT_AI_MODEL) {
-      const button = mainSearchBox.querySelectorAll(
-        AI_MODEL_BUTTON_GROUP_SELECTOR
-      )[0];
+      const textarea = getDeepestMainTextarea();
+      if (!textarea) {
+        return;
+      }
+      const button = textarea.querySelector(AI_MODEL_BUTTON_SELECTOR);
+      if (!button) {
+        return;
+      }
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           mutation.addedNodes.forEach((node) => {
