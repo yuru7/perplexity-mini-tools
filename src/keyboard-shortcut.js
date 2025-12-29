@@ -978,9 +978,28 @@
             block: "center",
           });
         } else {
-          nextLink.scrollIntoView({
+          const parent = nextLink.closest("div.py-md");
+          const scrollElement = parent ? parent : nextLink;
+          scrollElement.scrollIntoView({
             block: "nearest",
           });
+
+          if (event.code === "ArrowUp") {
+            // 固定要素との重複を避けるため、スクロール位置を調整
+            const fixedElementHeight = 120; // 固定要素の高さ（実際の値に合わせて調整）
+            const scrollContainer =
+              nextLink.closest(".scrollable-container") ||
+              document.documentElement;
+            const elementTop = nextLink.getBoundingClientRect().top;
+            const scrollTop =
+              scrollContainer.scrollTop || document.documentElement.scrollTop;
+
+            // 要素が固定要素と重複している場合、パディング分だけ下にスクロール
+            if (elementTop < fixedElementHeight) {
+              const adjustment = fixedElementHeight - elementTop + 10; // 10px の余白
+              scrollContainer.scrollTop = scrollTop - adjustment;
+            }
+          }
         }
         const scrollContainer = libraryLinks.links[
           libraryLinks.activeIndex
