@@ -22,7 +22,6 @@
   const SELECT_AI_MODEL = 2;
 
   const SEARCH_MODE_BUTTONS_LENGTH = 3;
-  const SEARCH_SOURCE_BUTTON_POS = 1;
 
   const libraryLinks = {
     activeIndex: -1,
@@ -238,25 +237,25 @@
     if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "ArrowUp") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(UP, SELECT_SEARCH_MODE);
+      navigateSearchOptions(UP, SELECT_SEARCH_MODE);
       return;
     }
     if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "ArrowDown") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(DOWN, SELECT_SEARCH_MODE);
+      navigateSearchOptions(DOWN, SELECT_SEARCH_MODE);
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowUp") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(UP, SELECT_AI_MODEL);
+      navigateSearchOptions(UP, SELECT_AI_MODEL);
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowDown") {
       event.preventDefault();
       event.stopImmediatePropagation();
-      selectSearchMode(DOWN, SELECT_AI_MODEL);
+      navigateSearchOptions(DOWN, SELECT_AI_MODEL);
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "Period") {
@@ -464,7 +463,7 @@
     return parent.querySelectorAll("button");
   }
 
-  async function selectSearchMode(upOrDown, searchMode) {
+  async function navigateSearchOptions(upOrDown, searchMode) {
     // buttonIndex = 0 の場合、「検索」と「リサーチ」の切り替えを行う
 
     // textarea を囲む span の下から検索する
