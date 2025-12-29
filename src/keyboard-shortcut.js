@@ -1,7 +1,7 @@
 (() => {
   const MODEL_SELECT_AREA_ITEM_SELECTOR = "div.group\\/item";
-  const MODEL_SELECT_AREA_NOT_ITEM_SELECTOR = "button.group\\/switch:disabled";
-  const MODEL_SELECT_AREA_ITEM_CHECKED_SELECTOR = ".text-super";
+  const MODEL_SELECT_AREA_TOGGLE_ITEM_SELECTOR = 'button[role="switch"]';
+  const MODEL_SELECT_AREA_NOT_ITEM_SELECTOR = `${MODEL_SELECT_AREA_TOGGLE_ITEM_SELECTOR}[disabled]`;
   const MAIN_TEXTAREA_SELECTOR = "main div:has(#ask-input):has(button)";
   const TOP_EDITABLE_DIV_ID = "ask-input";
 
@@ -646,11 +646,14 @@
       : clickTarget.textContent;
 
     // 対象がトグルボタンの場合は、1つ前の要素とテキストを結合する
-    if (clickTarget.querySelector("button.group\\/switch")) {
-      modelName =
-        modelSelectBoxChildren[checkedIndex + add - 1].textContent.trim() +
-        " " +
-        modelName;
+    if (clickTarget.querySelector(MODEL_SELECT_AREA_TOGGLE_ITEM_SELECTOR)) {
+      const targetModelName =
+        modelSelectBoxChildren[checkedIndex + add - 1] &&
+        modelSelectBoxChildren[checkedIndex + add - 1].querySelector("span")
+          ? modelSelectBoxChildren[checkedIndex + add - 1].querySelector("span")
+              .textContent + " "
+          : "";
+      modelName = targetModelName + modelName;
     }
 
     // 前後の要素をクリックする
