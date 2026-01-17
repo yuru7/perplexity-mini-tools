@@ -5,10 +5,8 @@
   const MAIN_TEXTAREA_SELECTOR = "main div:has(#ask-input):has(button)";
   const TOP_EDITABLE_DIV_ID = "ask-input";
 
-  const SEARCH_SOURCE_AREA_ITEM_SELECTOR = MODEL_SELECT_AREA_ITEM_SELECTOR;
+  const SEARCH_SOURCE_AREA_ITEM_SELECTOR = '[role="menuitemcheckbox"]';
   const AI_MODEL_BUTTON_SELECTOR = 'button:has(use[*|href="#pplx-icon-cpu"])';
-  const SEARCH_SOURCE_BUTTON_SELECTOR =
-    'button[data-testid="sources-switcher-button"]';
 
   const LIBRARY_PATHNAME = "/library";
   const SPACES_PATHNAME = "/spaces";
@@ -649,9 +647,9 @@
     if (clickTarget.querySelector(MODEL_SELECT_AREA_TOGGLE_ITEM_SELECTOR)) {
       const targetModelName =
         modelSelectBoxChildren[checkedIndex + add - 1] &&
-        modelSelectBoxChildren[checkedIndex + add - 1].querySelector("span")
+          modelSelectBoxChildren[checkedIndex + add - 1].querySelector("span")
           ? modelSelectBoxChildren[checkedIndex + add - 1].querySelector("span")
-              .textContent + " "
+            .textContent + " "
           : "";
       modelName = targetModelName + modelName;
     }
@@ -674,13 +672,11 @@
     }
 
     const mainSearchBox = getDeepestMainTextarea();
-    if (!mainSearchBox || mainSearchBox.children.length !== 3) {
+    if (!mainSearchBox) {
       return;
     }
 
-    const searchSourceButton = document.querySelector(
-      SEARCH_SOURCE_BUTTON_SELECTOR
-    );
+    const searchSourceButton = mainSearchBox.querySelector(':scope > div:last-child button:first-child');
     if (!searchSourceButton) {
       return;
     }
@@ -689,6 +685,9 @@
       mutations.forEach((mutation) => {
         mutation.addedNodes.forEach(async (node) => {
           try {
+            if (node.tagName !== "DIV") {
+              return;
+            }
             // ポップアップがちらつくのでいったん非表示にするCSSを適用
             node.style.display = "none";
 
@@ -734,7 +733,9 @@
             document.getElementById(TOP_EDITABLE_DIV_ID).focus();
           } finally {
             // ポップアップ非表示CSSを削除
-            node.style.display = "";
+            if (node && node.style) {
+              node.style.display = "";
+            }
           }
         });
       });
@@ -744,8 +745,21 @@
       childList: true,
       subtree: true,
     });
+
     // 検索ソースボタンをクリック
-    searchSourceButton.click();
+    const ev = new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      pointerId: 1,
+      pointerType: 'mouse', // 'touch' / 'pen' なども可
+      isPrimary: true,
+      button: 0,
+      buttons: 1,
+      clientX: 100,
+      clientY: 100,
+    });
+    searchSourceButton.dispatchEvent(ev);
   }
 
   function setTextareaEventListeners(textarea) {
@@ -1213,8 +1227,8 @@
           targetItem.classList.remove("space-selection-active");
           targetItem =
             items[
-              (Array.from(items).indexOf(targetItem) - 1 + items.length) %
-                items.length
+            (Array.from(items).indexOf(targetItem) - 1 + items.length) %
+            items.length
             ];
           targetItem.classList.add("space-selection-active");
           targetItem.scrollIntoView({ block: "nearest" });
@@ -1233,7 +1247,7 @@
             index =
               currentIndex +
               wrapCount *
-                Math.floor((items.length - (currentIndex + 1)) / wrapCount);
+              Math.floor((items.length - (currentIndex + 1)) / wrapCount);
           }
           targetItem.classList.remove("space-selection-active");
           targetItem = items[index];
