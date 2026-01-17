@@ -1164,7 +1164,8 @@
       return;
     }
 
-    const targetItem = document.querySelector(".contents a");
+    const selector = ".scrollable-container a"
+    const targetItem = document.querySelector(selector);
     if (!targetItem) {
       return;
     }
@@ -1189,7 +1190,7 @@
           return;
         }
 
-        const tmp = document.querySelector(".contents a");
+        const tmp = document.querySelector(selector);
         if (!tmp) {
           return;
         }
@@ -1217,7 +1218,7 @@
             items[i].getBoundingClientRect().left <
             items[i - 1].getBoundingClientRect().left
           ) {
-            wrapCount = i + 1;
+            wrapCount = i;
             break;
           }
         }
