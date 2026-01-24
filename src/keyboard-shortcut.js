@@ -27,7 +27,7 @@
     init: (outer) => {
       const beforeLinks = libraryLinks.links;
       libraryLinks.links = Array.from(
-        outer.querySelectorAll(`a[href^="${SEARCH_PATHNAME}/"]`)
+        outer.querySelectorAll(`a[href^="${SEARCH_PATHNAME}/"]`),
       );
 
       if (libraryLinks.links.length === 0) {
@@ -218,7 +218,7 @@
           }
 
           resolve(config);
-        }
+        },
       );
     });
   }
@@ -267,7 +267,7 @@
   // 使用箇所で最もネストされた要素を取得する関数
   function getDeepestMainTextarea() {
     const elements = Array.from(
-      document.querySelectorAll(MAIN_TEXTAREA_SELECTOR)
+      document.querySelectorAll(MAIN_TEXTAREA_SELECTOR),
     );
     if (elements.length === 0) return null;
     if (elements.length === 1) return elements[0];
@@ -275,7 +275,7 @@
     // 他の要素の祖先でない要素（最も深い要素）を見つける
     return elements.find(
       (element) =>
-        !elements.some((other) => other !== element && element.contains(other))
+        !elements.some((other) => other !== element && element.contains(other)),
     );
   }
 
@@ -363,7 +363,7 @@
       }
       showLoadingIndicator();
       const link = document.querySelector(
-        `a[href="${SPACES_PATHNAME}"], a[href^="${SPACES_PATHNAME}#"]`
+        `a[href="${SPACES_PATHNAME}"], a[href^="${SPACES_PATHNAME}#"]`,
       );
       if (link) {
         link.click();
@@ -390,11 +390,11 @@
         return;
       }
       let spaceLink = document.querySelector(
-        `.\\@container\\/main a[href^="${SPACES_PATHNAME}"]`
+        `.\\@container\\/main a[href^="${SPACES_PATHNAME}"]`,
       );
       if (!spaceLink) {
         spaceLink = document.querySelector(
-          `.\\@container\\/main a[href^="${SPACE_DETAIL_PATHNAME}"]`
+          `.\\@container\\/main a[href^="${SPACE_DETAIL_PATHNAME}"]`,
         );
       }
       if (spaceLink) {
@@ -521,7 +521,7 @@
               node.style.display = "none";
 
               const modelSelectBoxChildren = node.querySelectorAll(
-                MODEL_SELECT_AREA_ITEM_SELECTOR
+                MODEL_SELECT_AREA_ITEM_SELECTOR,
               );
               if (modelSelectBoxChildren.length === 0) {
                 return;
@@ -557,20 +557,20 @@
   function getSelectedModelIndex(node) {
     let checkedIndex = 0;
     let modelSelectBoxChildren = Array.from(
-      node.querySelectorAll(MODEL_SELECT_AREA_ITEM_SELECTOR)
+      node.querySelectorAll(MODEL_SELECT_AREA_ITEM_SELECTOR),
     );
     // group/switch クラスを持つ要素を含む場合はそれを除外する
     modelSelectBoxChildren = modelSelectBoxChildren.filter(
-      (child) => !child.querySelector(MODEL_SELECT_AREA_NOT_ITEM_SELECTOR)
+      (child) => !child.querySelector(MODEL_SELECT_AREA_NOT_ITEM_SELECTOR),
     );
     // チェックアイコンが表示されているアイテムを調べる
     for (let i = modelSelectBoxChildren.length - 1; i >= 0; i--) {
       const checked =
         modelSelectBoxChildren[i].querySelector(
-          'button[data-state="checked"]'
+          'button[data-state="checked"]',
         ) ||
         modelSelectBoxChildren[i].querySelector(
-          'svg:has(use[*|href="#pplx-icon-check"])'
+          'svg:has(use[*|href="#pplx-icon-check"])',
         );
       if (checked && window.getComputedStyle(checked).opacity > 0) {
         checkedIndex = i;
@@ -647,9 +647,9 @@
     if (clickTarget.querySelector(MODEL_SELECT_AREA_TOGGLE_ITEM_SELECTOR)) {
       const targetModelName =
         modelSelectBoxChildren[checkedIndex + add - 1] &&
-          modelSelectBoxChildren[checkedIndex + add - 1].querySelector("span")
+        modelSelectBoxChildren[checkedIndex + add - 1].querySelector("span")
           ? modelSelectBoxChildren[checkedIndex + add - 1].querySelector("span")
-            .textContent + " "
+              .textContent + " "
           : "";
       modelName = targetModelName + modelName;
     }
@@ -676,7 +676,9 @@
       return;
     }
 
-    const searchSourceButton = mainSearchBox.querySelector(':scope > div:last-child button:first-child');
+    const searchSourceButton = mainSearchBox.querySelector(
+      ":scope > div:last-child button:first-child",
+    );
     if (!searchSourceButton) {
       return;
     }
@@ -692,7 +694,7 @@
             node.style.display = "none";
 
             const searchSourceBoxChildren = node.querySelectorAll(
-              SEARCH_SOURCE_AREA_ITEM_SELECTOR
+              SEARCH_SOURCE_AREA_ITEM_SELECTOR,
             );
             if (searchSourceBoxChildren.length === 0) {
               return;
@@ -747,12 +749,12 @@
     });
 
     // 検索ソースボタンをクリック
-    const ev = new PointerEvent('pointerdown', {
+    const ev = new PointerEvent("pointerdown", {
       bubbles: true,
       cancelable: true,
       composed: true,
       pointerId: 1,
-      pointerType: 'mouse', // 'touch' / 'pen' なども可
+      pointerType: "mouse", // 'touch' / 'pen' なども可
       isPrimary: true,
       button: 0,
       buttons: 1,
@@ -845,7 +847,7 @@
             if (
               !event.shiftKey &&
               ["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(
-                event.code
+                event.code,
               ) &&
               text.length === 0
             ) {
@@ -854,7 +856,7 @@
               scrollTarget.focus();
             }
           },
-          true
+          true,
         );
       }
       // Escape押下でスクロール可能なコンテナにフォーカスを移す
@@ -869,7 +871,7 @@
             scrollTarget.focus();
           }
         },
-        true
+        true,
       );
     }
 
@@ -896,7 +898,7 @@
             textarea.focus();
           }
         },
-        true
+        true,
       );
     }
 
@@ -917,7 +919,7 @@
           }
         }
       },
-      true
+      true,
     );
   }
 
@@ -1043,8 +1045,13 @@
         ele = ele.parentElement;
       }
 
-      if (!doNotFocus && document.activeElement !== input) {
+      if (
+        !doNotFocus &&
+        document.activeElement !== input &&
+        !input.dataset.pmtLibraryInputFocused
+      ) {
         input.focus();
+        input.dataset.pmtLibraryInputFocused = "true";
       }
 
       // ナビゲーションが無効の場合、イベントハンドラーの設定はしない
@@ -1062,7 +1069,7 @@
           (event) => {
             activeLinkHandler(event, true);
           },
-          true
+          true,
         );
       } else {
         input.addEventListener("keydown", activeLinkHandler, true);
@@ -1072,7 +1079,7 @@
       const isOuter = (current) => {
         return (
           current.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`) &&
-          current.classList.contains("w-full")
+          current.classList.contains("scrollable-container")
         );
       };
 
@@ -1142,8 +1149,6 @@
           subtree: true,
           characterData: true,
         });
-
-        return;
       } else {
         libraryLinks.init(outer);
         setObserver();
@@ -1164,7 +1169,7 @@
       return;
     }
 
-    const selector = ".scrollable-container a"
+    const selector = ".scrollable-container a";
     const targetItem = document.querySelector(selector);
     if (!targetItem) {
       return;
@@ -1228,8 +1233,8 @@
           targetItem.classList.remove("space-selection-active");
           targetItem =
             items[
-            (Array.from(items).indexOf(targetItem) - 1 + items.length) %
-            items.length
+              (Array.from(items).indexOf(targetItem) - 1 + items.length) %
+                items.length
             ];
           targetItem.classList.add("space-selection-active");
           targetItem.scrollIntoView({ block: "nearest" });
@@ -1248,7 +1253,7 @@
             index =
               currentIndex +
               wrapCount *
-              Math.floor((items.length - (currentIndex + 1)) / wrapCount);
+                Math.floor((items.length - (currentIndex + 1)) / wrapCount);
           }
           targetItem.classList.remove("space-selection-active");
           targetItem = items[index];
@@ -1267,7 +1272,7 @@
           targetItem.scrollIntoView({ block: "nearest" });
         }
       },
-      true
+      true,
     );
   }
 
@@ -1285,7 +1290,7 @@
 
     scrollableContainer.addEventListener("focus", (event) => {
       const activeLink = scrollableContainer.querySelector(
-        "a.collection-active"
+        "a.collection-active",
       );
       if (activeLink) {
         activeLink.focus();
@@ -1313,7 +1318,7 @@
       }
 
       const activeLink = scrollableContainer.querySelector(
-        "a.collection-active"
+        "a.collection-active",
       );
       if (!activeLink) {
         return;
@@ -1412,7 +1417,7 @@
 
           // 追加された textarea 要素へのイベントリスナー
           const textarea = parent.querySelector(
-            `#${TOP_EDITABLE_DIV_ID}:not([data-pmt-custom-event])`
+            `#${TOP_EDITABLE_DIV_ID}:not([data-pmt-custom-event])`,
           );
           if (textarea) {
             setTextareaEventListeners(textarea);
@@ -1420,7 +1425,7 @@
 
           // コピーボタンのストローク要素を取得
           const copySvg = parent.querySelectorAll(
-            'use[*|href="#pplx-icon-copy"]'
+            'use[*|href="#pplx-icon-copy"]',
           );
           const copyButtons = [];
           copySvg.forEach((svg) => {
@@ -1453,12 +1458,12 @@
                 const cleanedText = clipText
                   .replace(
                     /(\r?\nCitations:\r?\n\[1\][\s\S]+)?---\r?\n[^\r\n]+$/,
-                    ""
+                    "",
                   ) // Citations: ... 形式
                   .replace(/\r?\n(\[[0-9]+\] https?:\/\/[^\s]+(\r?\n)?)+$/, "") // Perplexity側の形式変更に伴い追加対応 2025-06-03
                   .replace(
                     /\r?\n(\[[0-9]+\]\(https?:\/\/[^\s]+\)(\r?\n)?)+$/,
-                    ""
+                    "",
                   ) // Perplexity側の形式変更に伴い追加対応 2025-08-22
                   .replace(/\[[0-9]+\]/g, "") // 引用番号部分を削除
                   .trim();
@@ -1514,7 +1519,7 @@
           // ツールチップ表示
           toolTipHandler(event);
         },
-        true
+        true,
       );
 
       document.addEventListener(
@@ -1522,7 +1527,7 @@
         (event) => {
           toolTipHandler(event);
         },
-        true
+        true,
       );
     }
 
@@ -1538,7 +1543,7 @@
 
     // ページ読み込み時と、DOM変更時に対応する
     const textarea = document.querySelector(
-      `#${TOP_EDITABLE_DIV_ID}:not([data-pmt-custom-event])`
+      `#${TOP_EDITABLE_DIV_ID}:not([data-pmt-custom-event])`,
     );
     if (textarea) {
       setTextareaEventListeners(textarea);
