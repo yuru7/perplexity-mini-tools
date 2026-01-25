@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Perplexity Mini Tools",
-  "version": "0.3.78",
+  "version": "0.3.79",
   "description": "__MSG_extensionDescription__",
   "default_locale": "ja",
   "icons": {
@@ -35,7 +35,8 @@
         "lib/turndown-plugin-gfm.js",
         "lib/turndown.js",
         "src/keyboard-shortcut.js",
-        "src/toc.js"
+        "src/toc.js",
+        "src/show-selected-model.js"
       ],
       "css": [
         "src/style.css"

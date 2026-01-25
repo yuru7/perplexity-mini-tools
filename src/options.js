@@ -10,24 +10,9 @@ document.addEventListener("DOMContentLoaded", () => {
       "mermaidEnabled",
       "mermaidTheme",
       "tocEnabled",
+      "showSelectedModel",
     ],
     (data) => {
-      // TODO: 2025-06-19 PerplexityのUIに変更が加わっている最中なので様子見
-      // // Markdownエディターライクな操作設定
-      // if (data.markdownEditorLike === undefined) {
-      //   document.getElementById("markdown-editor-like").checked = true;
-      // } else {
-      //   document.getElementById("markdown-editor-like").checked =
-      //     data.markdownEditorLike;
-      // }
-
-      // // 送信を Ctrl+Enter にする設定
-      // if (data.ctrlEnter === undefined) {
-      //   document.getElementById("ctrl-enter").checked = false;
-      // } else {
-      //   document.getElementById("ctrl-enter").checked = data.ctrlEnter;
-      // }
-
       // 検索オプション切り替えの設定
       if (data.searchOption === undefined) {
         document.getElementById("shortcut-search-options").checked = true;
@@ -70,28 +55,24 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         document.getElementById("toc-enabled").checked = data.tocEnabled;
       }
-    }
+
+      // 選択中モデル表示の設定
+      if (data.showSelectedModel === undefined) {
+        document.getElementById("show-selected-model").checked = true;
+      } else {
+        document.getElementById("show-selected-model").checked =
+          data.showSelectedModel;
+      }
+    },
   );
 });
 
 // 設定保存
 document.querySelector("form").addEventListener("submit", (e) => {
   e.preventDefault();
-
-  // TODO: 2025-06-19 PerplexityのUIに変更が加わっている最中なので様子見
-  // // Markdownエディターライクな操作設定
-  // const markdownEditorLike = document.getElementById(
-  //   "markdown-editor-like"
-  // ).checked;
-  // chrome.storage.local.set({ markdownEditorLike });
-
-  // // 送信を Ctrl+Enter にする設定
-  // const ctrlEnter = document.getElementById("ctrl-enter").checked;
-  // chrome.storage.local.set({ ctrlEnter });
-
   // 検索オプションの設定
   const searchOption = document.getElementById(
-    "shortcut-search-options"
+    "shortcut-search-options",
   ).checked;
   chrome.storage.local.set({ searchOption });
 
@@ -118,6 +99,12 @@ document.querySelector("form").addEventListener("submit", (e) => {
   // TOC機能の設定
   const tocEnabled = document.getElementById("toc-enabled").checked;
   chrome.storage.local.set({ tocEnabled });
+
+  // 選択中モデル表示の設定
+  const showSelectedModel = document.getElementById(
+    "show-selected-model",
+  ).checked;
+  chrome.storage.local.set({ showSelectedModel });
 
   // 過去に利用していた設定の削除
   chrome.storage.local.remove("fixInputLag"); // テキストボックス入力時のラグを修正する（実験的機能）
