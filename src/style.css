@@ -265,11 +265,17 @@
 /* TOC Styles */
 #toc-container {
   position: fixed;
-  top: max(25%, 170px);
+  top: max(35%, 170px);
   right: 23px;
   transform: translateY(-50%);
   z-index: 10000;
   transition: all 0.3s ease;
+}
+/* Narrow-width adjustments */
+@media (max-width: 900px) {
+  #toc-container {
+    right: 4px;
+  }
 }
 
 .toc-indicator {
