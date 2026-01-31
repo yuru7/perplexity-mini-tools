@@ -1,6 +1,10 @@
 // モデル選択ボタンの隣に、選択中のモデル名を表示する
 
 (async () => {
+
+  // 思案中、検討中などの日本語表示を検出する正規表現
+  const THINKING_STRINGS_JP = /思案中|検討中/g;
+
   async function getConfig() {
     const config = {};
     // 設定読み込み
@@ -43,7 +47,9 @@
 
     const label = button.getAttribute("aria-label");
     if (!label) return null;
-    return label.trim();
+    // ボタンの aria-label には「思案中」「検討中」などの日本語ステータスが入るため、
+    // 表示用には英語の "Thinking" に統一してステータスを示す。
+    return label.trim().replace(THINKING_STRINGS_JP, "Thinking");
   };
 
   const createModelNameElement = () => {
