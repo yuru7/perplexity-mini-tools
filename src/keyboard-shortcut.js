@@ -7,6 +7,7 @@
 
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = '[role="menuitemcheckbox"]';
   const AI_MODEL_BUTTON_SELECTOR = 'button:has(use[*|href="#pplx-icon-cpu"])';
+  const CHECK_ICON_SELECTOR = 'svg:has(use[*|href="#pplx-icon-check"])';
 
   const LIBRARY_PATHNAME = "/library";
   const SPACES_PATHNAME = "/spaces";
@@ -16,8 +17,9 @@
 
   const UP = 0;
   const DOWN = 1;
-  const SELECT_SEARCH_MODE = 1;
-  const SELECT_AI_MODEL = 2;
+
+  const MODEL_SELECT_CURSOR_HIGHLIGHT_CLASS =
+    "pmt-model-select-cursor-key-highlight";
 
   const SEARCH_MODE_BUTTONS_LENGTH = 3;
 
@@ -260,6 +262,25 @@
       navigateAiModel(DOWN);
       return;
     }
+
+    if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "Period") {
+      // AIモデルの切り替え (カーソルキー操作)
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      navigateAiModelWithCursorKeys(event);
+      return;
+    }
+    if (
+      ["ArrowUp", "ArrowDown", "Enter"].includes(event.code) &&
+      document.querySelector(`.${MODEL_SELECT_CURSOR_HIGHLIGHT_CLASS}`)
+    ) {
+      // モデル選択ポップアップが表示されている場合のカーソルキー操作無効化
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      navigateAiModelWithCursorKeys(event);
+      return;
+    }
+
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "Period") {
       event.preventDefault();
       event.stopImmediatePropagation();
@@ -465,7 +486,7 @@
     return parent.querySelectorAll("button");
   }
 
-  async function navigateSearchOptions(upOrDown) {
+  function getMainSearchBoxAndSearchModeButtons() {
     // textarea を囲む span の下から検索する
     const mainSearchBox = getDeepestMainTextarea();
     if (!mainSearchBox || mainSearchBox.children.length !== 3) {
@@ -474,6 +495,12 @@
 
     const searchModeButtons =
       mainSearchBox.children[1].querySelectorAll("button");
+
+    return [mainSearchBox, searchModeButtons];
+  }
+
+  async function navigateSearchOptions(upOrDown) {
+    const [_, searchModeButtons] = getMainSearchBoxAndSearchModeButtons();
 
     const index = getSearchModeIndex(searchModeButtons);
     if (index < 0) {
@@ -495,14 +522,8 @@
   }
 
   async function navigateAiModel(upOrDown) {
-    // textarea を囲む span の下から検索する
-    const mainSearchBox = getDeepestMainTextarea();
-    if (!mainSearchBox || mainSearchBox.children.length !== 3) {
-      return;
-    }
-
-    const searchModeButtons =
-      mainSearchBox.children[1].querySelectorAll("button");
+    const [mainSearchBox, searchModeButtons] =
+      getMainSearchBoxAndSearchModeButtons();
 
     // DeepResearch ボタンがアクティブの場合はモデル選択ボタンが表示されていないので終了
     if (isDeepResearchOrLabs(searchModeButtons)) {
@@ -562,6 +583,148 @@
     button.click();
   }
 
+  let alreadyNavigateAiModelWithCursorKeysObserver = false;
+  let enteredIndex = -1;
+  function navigateAiModelWithCursorKeys(event) {
+    // 想定する処理の流れ
+    // - モデル選択ボタンをクリックしてポップアップ表示
+    // - ポップアップの、現在アクティブ部分をハイライト
+    //   - ハイライト箇所は、通常のモデル名だけでなく、トグル部分も選択できるようにする
+    // - カーソルキー上下でハイライト移動
+    // - Enterでハイライト要素をクリック
+
+    if (event.code !== "Period") {
+      const highlightedElement = document.querySelector(
+        `.${MODEL_SELECT_CURSOR_HIGHLIGHT_CLASS}`,
+      );
+      const menuElement = document.querySelector(
+        `div[role="menu"]:has(${MODEL_SELECT_AREA_ITEM_SELECTOR})`,
+      );
+      const modelSelectBoxChildren = menuElement.querySelectorAll(
+        MODEL_SELECT_AREA_ITEM_SELECTOR,
+      );
+      if (highlightedElement !== null && modelSelectBoxChildren.length > 0) {
+        if (event.code === "ArrowUp") {
+          enteredIndex = -1;
+          modelSelectBoxChildren.forEach((child, index) => {
+            if (child === highlightedElement) {
+              // 現在のハイライトを削除
+              child.classList.remove(MODEL_SELECT_CURSOR_HIGHLIGHT_CLASS);
+              // 一つ上の要素にハイライトを移動
+              let newIndex = index - 1;
+              if (newIndex < 0) {
+                newIndex = modelSelectBoxChildren.length - 1;
+              }
+              modelSelectBoxChildren[newIndex].classList.add(
+                MODEL_SELECT_CURSOR_HIGHLIGHT_CLASS,
+              );
+              // 表示されるようスクロール
+              modelSelectBoxChildren[newIndex].scrollIntoView({
+                block: "nearest",
+              });
+            }
+          });
+        } else if (event.code === "ArrowDown") {
+          enteredIndex = -1;
+          modelSelectBoxChildren.forEach((child, index) => {
+            if (child === highlightedElement) {
+              // 現在のハイライトを削除
+              child.classList.remove(MODEL_SELECT_CURSOR_HIGHLIGHT_CLASS);
+              // 一つ下の要素にハイライトを移動
+              let newIndex = index + 1;
+              if (newIndex >= modelSelectBoxChildren.length) {
+                newIndex = 0;
+              }
+              modelSelectBoxChildren[newIndex].classList.add(
+                MODEL_SELECT_CURSOR_HIGHLIGHT_CLASS,
+              );
+              // 表示されるようスクロール
+              modelSelectBoxChildren[newIndex].scrollIntoView({
+                block: "nearest",
+              });
+            }
+          });
+        } else if (event.code === "Enter") {
+          highlightedElement.click();
+          // Thinking トグルボタンの含まれるアイテムの場合、選択位置を保持するための情報を保持
+          if (highlightedElement.querySelector("button")) {
+            for (const [index, child] of modelSelectBoxChildren.entries()) {
+              if (child === highlightedElement) {
+                enteredIndex = index;
+                break;
+              }
+            }
+          } else {
+            enteredIndex = -1;
+          }
+        }
+      }
+      return;
+    }
+
+    const [mainSearchBox, searchModeButtons] =
+      getMainSearchBoxAndSearchModeButtons();
+
+    // DeepResearch ボタンがアクティブの場合はモデル選択ボタンが表示されていないので終了
+    if (isDeepResearchOrLabs(searchModeButtons)) {
+      return;
+    }
+
+    const textarea = getDeepestMainTextarea();
+    if (!textarea) {
+      return;
+    }
+
+    const button = textarea.querySelector(AI_MODEL_BUTTON_SELECTOR);
+    if (!button) {
+      return;
+    }
+
+    if (!alreadyNavigateAiModelWithCursorKeysObserver) {
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            // 通常の要素以外はスキップ
+            if (node.tagName !== "DIV") {
+              return;
+            }
+
+            const modelSelectBoxChildren = node.querySelectorAll(
+              MODEL_SELECT_AREA_ITEM_SELECTOR,
+            );
+            if (modelSelectBoxChildren.length === 0) {
+              return;
+            }
+            for (const [index, child] of modelSelectBoxChildren.entries()) {
+              // ハイライト用のクラスを追加
+              console.log("index:", index, "enteredIndex:", enteredIndex);
+              if (index === enteredIndex) {
+                console.log("enter index:", enteredIndex);
+                child.classList.add(MODEL_SELECT_CURSOR_HIGHLIGHT_CLASS);
+                enteredIndex = -1;
+                break;
+              }
+              if (
+                enteredIndex === -1 &&
+                child.querySelector(`div.text-super ${CHECK_ICON_SELECTOR}`)
+              ) {
+                child.classList.add(MODEL_SELECT_CURSOR_HIGHLIGHT_CLASS);
+                break;
+              }
+            }
+          });
+        });
+      });
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+      alreadyNavigateAiModelWithCursorKeysObserver = true;
+    }
+
+    button.click();
+  }
+
   function getSelectedModelIndex(node) {
     let checkedIndex = 0;
     let modelSelectBoxChildren = Array.from(
@@ -576,10 +739,7 @@
       const checked =
         modelSelectBoxChildren[i].querySelector(
           'button[data-state="checked"]',
-        ) ||
-        modelSelectBoxChildren[i].querySelector(
-          'svg:has(use[*|href="#pplx-icon-check"])',
-        );
+        ) || modelSelectBoxChildren[i].querySelector(CHECK_ICON_SELECTOR);
       if (checked && window.getComputedStyle(checked).opacity > 0) {
         checkedIndex = i;
         break;

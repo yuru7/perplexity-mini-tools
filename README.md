@@ -16,6 +16,7 @@ Change Pro-search options:
 
 - `Ctrl + ArrowDown`: Switch to the next model
 - `Ctrl + ArrowUp`: Switch to the previous model
+- `Ctrl + .`: Select the AI model
 - `Ctrl + Shift + .`: Toggle Web search source
 - `Ctrl + Shift + ArrowDown`: Switch to the next search mode (cycles Web / Deep Research / Labs)
 - `Ctrl + Shift + ArrowUp`: Switch to the previous search mode (cycles backward)
