@@ -232,28 +232,32 @@
     if (event.isComposing) {
       return;
     }
-    if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "ArrowUp") {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      navigateSearchOptions(UP, SELECT_SEARCH_MODE);
-      return;
-    }
-    if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "ArrowDown") {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      navigateSearchOptions(DOWN, SELECT_SEARCH_MODE);
-      return;
-    }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowUp") {
+      // 検索モードの切り替え（上）
       event.preventDefault();
       event.stopImmediatePropagation();
-      navigateSearchOptions(UP, SELECT_AI_MODEL);
+      navigateSearchOptions(UP);
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowDown") {
+      // 検索モードの切り替え（下）
       event.preventDefault();
       event.stopImmediatePropagation();
-      navigateSearchOptions(DOWN, SELECT_AI_MODEL);
+      navigateSearchOptions(DOWN);
+      return;
+    }
+    if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "ArrowUp") {
+      // AIモデルの切り替え（上）
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      navigateAiModel(UP);
+      return;
+    }
+    if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "ArrowDown") {
+      // AIモデルの切り替え（下）
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      navigateAiModel(DOWN);
       return;
     }
     if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "Period") {
@@ -461,97 +465,101 @@
     return parent.querySelectorAll("button");
   }
 
-  async function navigateSearchOptions(upOrDown, searchMode) {
-    // buttonIndex = 0 の場合、「検索」と「リサーチ」の切り替えを行う
-
+  async function navigateSearchOptions(upOrDown) {
     // textarea を囲む span の下から検索する
     const mainSearchBox = getDeepestMainTextarea();
     if (!mainSearchBox || mainSearchBox.children.length !== 3) {
       return;
     }
 
-    // Pro, DeepResearch, Labs ボタンの切り替え動作が指定されている場合
     const searchModeButtons =
       mainSearchBox.children[1].querySelectorAll("button");
-    if (searchMode === SELECT_SEARCH_MODE) {
-      const index = getSearchModeIndex(searchModeButtons);
-      if (index < 0) {
-        return;
-      }
-      if (upOrDown === UP) {
-        if (index === 0) {
-          searchModeButtons[SEARCH_MODE_BUTTONS_LENGTH - 1].click();
-        } else {
-          searchModeButtons[index - 1].click();
-        }
-      } else {
-        if (index === SEARCH_MODE_BUTTONS_LENGTH - 1) {
-          searchModeButtons[0].click();
-        } else {
-          searchModeButtons[index + 1].click();
-        }
-      }
+
+    const index = getSearchModeIndex(searchModeButtons);
+    if (index < 0) {
       return;
     }
+    if (upOrDown === UP) {
+      if (index === 0) {
+        searchModeButtons[SEARCH_MODE_BUTTONS_LENGTH - 1].click();
+      } else {
+        searchModeButtons[index - 1].click();
+      }
+    } else {
+      if (index === SEARCH_MODE_BUTTONS_LENGTH - 1) {
+        searchModeButtons[0].click();
+      } else {
+        searchModeButtons[index + 1].click();
+      }
+    }
+  }
+
+  async function navigateAiModel(upOrDown) {
+    // textarea を囲む span の下から検索する
+    const mainSearchBox = getDeepestMainTextarea();
+    if (!mainSearchBox || mainSearchBox.children.length !== 3) {
+      return;
+    }
+
+    const searchModeButtons =
+      mainSearchBox.children[1].querySelectorAll("button");
 
     // DeepResearch ボタンがアクティブの場合はモデル選択ボタンが表示されていないので終了
     if (isDeepResearchOrLabs(searchModeButtons)) {
       return;
     }
 
-    if (searchMode === SELECT_AI_MODEL) {
-      const textarea = getDeepestMainTextarea();
-      if (!textarea) {
-        return;
-      }
-      const button = textarea.querySelector(AI_MODEL_BUTTON_SELECTOR);
-      if (!button) {
-        return;
-      }
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          mutation.addedNodes.forEach((node) => {
-            try {
-              // 通常の要素以外はスキップ
-              if (node.tagName !== "DIV") {
-                return;
-              }
-
-              // ポップアップがちらつくのでいったん非表示にするCSSを適用
-              node.style.display = "none";
-
-              const modelSelectBoxChildren = node.querySelectorAll(
-                MODEL_SELECT_AREA_ITEM_SELECTOR,
-              );
-              if (modelSelectBoxChildren.length === 0) {
-                return;
-              }
-              const selectModelName = clickModel(node, upOrDown);
-
-              // ツールチップのテキストを更新
-              tooltipManager.showTooltip(selectModelName, mainSearchBox);
-
-              // モデル選択ポップアップが消えていない場合はテキストボックスにフォーカスを移す
-              if (document.body.contains(modelSelectBoxChildren[0])) {
-                document.getElementById(TOP_EDITABLE_DIV_ID).focus();
-              }
-            } finally {
-              // ポップアップ非表示CSSを削除
-              if (node.tagName === "DIV") {
-                node.style.display = "";
-              }
-            }
-          });
-        });
-        observer.disconnect();
-      });
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-      // モデル選択ボタンをクリック
-      button.click();
+    const textarea = getDeepestMainTextarea();
+    if (!textarea) {
+      return;
     }
+    const button = textarea.querySelector(AI_MODEL_BUTTON_SELECTOR);
+    if (!button) {
+      return;
+    }
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          try {
+            // 通常の要素以外はスキップ
+            if (node.tagName !== "DIV") {
+              return;
+            }
+
+            // ポップアップがちらつくのでいったん非表示にするCSSを適用
+            node.style.display = "none";
+
+            const modelSelectBoxChildren = node.querySelectorAll(
+              MODEL_SELECT_AREA_ITEM_SELECTOR,
+            );
+            if (modelSelectBoxChildren.length === 0) {
+              return;
+            }
+            const selectModelName = clickModel(node, upOrDown);
+
+            // ツールチップのテキストを更新
+            tooltipManager.showTooltip(selectModelName, mainSearchBox);
+
+            // モデル選択ポップアップが消えていない場合はテキストボックスにフォーカスを移す
+            if (document.body.contains(modelSelectBoxChildren[0])) {
+              document.getElementById(TOP_EDITABLE_DIV_ID).focus();
+            }
+          } finally {
+            // ポップアップ非表示CSSを削除
+            if (node.tagName === "DIV") {
+              node.style.display = "";
+            }
+          }
+        });
+      });
+      observer.disconnect();
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+    // モデル選択ボタンをクリック
+    button.click();
   }
 
   function getSelectedModelIndex(node) {
