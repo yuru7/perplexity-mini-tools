@@ -7,25 +7,18 @@ This Chrome extension adds the following features to make Perplexity a little mo
 
 Navigation:
 
-- `Ctrl(Cmd) + B`: Focus sidebar
 - `Ctrl(Cmd) + K`: Navigate to "/library"
 - `Ctrl(Cmd) + Shift + K`: Navigate to "/spaces"
 - `Up/Down & Enter on "/library" search box`: Navigate through search results
 - `Up/Down/Left/Right & Enter on "/spaces"`: Navigate through spaces
-
-Markdown-editor-like operations:
-
-- `Shift + Enter`: Add Markdown list symbols and indentation along with line breaks
-- `Tab`: Indent the current line (Selection operation support)
-- `Shift + Tab`: Outdent the current line (Selection operation support)
-- Feature:
-    - Automatic renumbering of numbered lists when indent and outdent
 
 Change Pro-search options:
 
 - `Ctrl + ArrowDown`: Switch to the next model
 - `Ctrl + ArrowUp`: Switch to the previous model
 - `Ctrl + Shift + .`: Toggle Web search source
+- `Ctrl + Shift + ArrowDown`: Switch to the next search mode (cycles Web / Deep Research / Labs)
+- `Ctrl + Shift + ArrowUp`: Switch to the previous search mode (cycles backward)
 
 Simple Copy:
 
