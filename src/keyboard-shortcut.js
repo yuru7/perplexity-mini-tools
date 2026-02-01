@@ -309,37 +309,7 @@
       return;
     }
 
-    if (
-      !(
-        (ctrlOrMetaKey(event) && event.key === "Shift") ||
-        (event.shiftKey && ["Control", "Meta"].includes(event.key))
-      )
-    ) {
-      return;
-    }
-
-    if (event.type === "keydown") {
-      const textarea = getDeepestMainTextarea();
-      if (!textarea) {
-        return;
-      }
-      const buttons = getSearchBoxButtons(textarea);
-      if (!buttons) {
-        return;
-      }
-      if (isDeepResearchOrLabs(buttons)) {
-        return;
-      }
-      const button = textarea.querySelector(AI_MODEL_BUTTON_SELECTOR);
-      if (!button) {
-        return;
-      }
-      const ariaLabel = button.getAttribute("aria-label");
-      if (!ariaLabel) {
-        return;
-      }
-      tooltipManager.showTooltip(ariaLabel, textarea, true);
-    } else if (event.type === "keyup") {
+    if (["Control", "Meta"].includes(event.key) && event.type === "keyup") {
       tooltipManager.hideTooltip();
     }
   }
@@ -556,7 +526,11 @@
             if (modelSelectBoxChildren.length === 0) {
               return;
             }
-            const selectModelName = clickModel(node, upOrDown);
+            // 部分的に日本語が混じるので変換する
+            const selectModelName = clickModel(node, upOrDown).replace(
+              /検討中/g,
+              "Thinking",
+            );
 
             // ツールチップのテキストを更新
             tooltipManager.showTooltip(selectModelName, mainSearchBox);
