@@ -671,9 +671,7 @@
             }
             for (const [index, child] of modelSelectBoxChildren.entries()) {
               // ハイライト用のクラスを追加
-              console.log("index:", index, "enteredIndex:", enteredIndex);
               if (index === enteredIndex) {
-                console.log("enter index:", enteredIndex);
                 child.classList.add(MODEL_SELECT_CURSOR_HIGHLIGHT_CLASS);
                 enteredIndex = -1;
                 break;
