@@ -6,7 +6,7 @@
   const TOP_EDITABLE_DIV_ID = "ask-input";
 
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = '[role="menuitemcheckbox"]';
-  const AI_MODEL_BUTTON_SELECTOR = 'button:has(use[*|href="#pplx-icon-cpu"])';
+  const AI_MODEL_BUTTON_SELECTOR = 'button:has(use[*|href="#pplx-icon-chevron-down"])';
   const CHECK_ICON_SELECTOR = 'svg:has(use[*|href="#pplx-icon-check"])';
 
   const LIBRARY_PATHNAME = "/library";
@@ -234,20 +234,21 @@
     if (event.isComposing) {
       return;
     }
-    if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowUp") {
-      // 検索モードの切り替え（上）
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      navigateSearchOptions(UP);
-      return;
-    }
-    if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowDown") {
-      // 検索モードの切り替え（下）
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      navigateSearchOptions(DOWN);
-      return;
-    }
+    // TODO 2026-02-05 perplexityのUIが代わり、検索モードの切り替えは [+] からマウス操作で行うようになったため除外
+    // if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowUp") {
+    //   // 検索モードの切り替え（上）
+    //   event.preventDefault();
+    //   event.stopImmediatePropagation();
+    //   navigateSearchOptions(UP);
+    //   return;
+    // }
+    // if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "ArrowDown") {
+    //   // 検索モードの切り替え（下）
+    //   event.preventDefault();
+    //   event.stopImmediatePropagation();
+    //   navigateSearchOptions(DOWN);
+    //   return;
+    // }
     if (ctrlOrMetaKey(event) && !event.shiftKey && event.code === "ArrowUp") {
       // AIモデルの切り替え（上）
       event.preventDefault();
@@ -281,12 +282,13 @@
       return;
     }
 
-    if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "Period") {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      toggleWebInSearchSource();
-      return;
-    }
+    // TODO 2026-02-05 perplexityのUIが代わり、検索ソースの切り替えは [+] からマウス操作で行うようになったため除外
+    // if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "Period") {
+    //   event.preventDefault();
+    //   event.stopImmediatePropagation();
+    //   toggleWebInSearchSource();
+    //   return;
+    // }
   }
 
   // 使用箇所で最もネストされた要素を取得する関数
