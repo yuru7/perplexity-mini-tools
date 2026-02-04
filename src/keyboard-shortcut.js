@@ -434,6 +434,9 @@
   }
 
   function isDeepResearchOrLabs(buttons) {
+    if (!buttons || buttons.length < 3) {
+      return false;
+    }
     return (
       buttons[1].dataset.state === "checked" ||
       buttons[2].dataset.state === "checked"
@@ -441,8 +444,10 @@
   }
 
   function getSearchModeIndex(buttons) {
+    if (!buttons || buttons.length === 0) return -1;
     let index = -1;
-    for (let i = 0; i < SEARCH_MODE_BUTTONS_LENGTH; i++) {
+    const limit = Math.min(buttons.length, SEARCH_MODE_BUTTONS_LENGTH);
+    for (let i = 0; i < limit; i++) {
       if (buttons[i].dataset.state === "checked") {
         index = i;
         break;
