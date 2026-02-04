@@ -912,53 +912,6 @@
   function setTextareaEventListeners(textarea) {
     textarea.dataset.pmtCustomEvent = "true";
 
-    // TODO 2025-08-10 一旦除外
-    // // Ctrl+V の際にカーソルが末尾にジャンプする不具合を予防
-    // // 貼り付け形式がテキストの場合、標準のイベントリスナーには処理をさせない
-    // textarea.addEventListener(
-    //   "paste",
-    //   (event) => {
-    //     if (!event.clipboardData.types.includes("text/plain")) {
-    //       return;
-    //     }
-    //     event.stopImmediatePropagation();
-    //   },
-    //   true
-    // );
-    // フォーカスアウト & イン時にカーソル位置が移動する不具合を予防
-    // let focusByMouse = false;
-    // textarea.addEventListener(
-    //   "mousedown",
-    //   () => {
-    //     focusByMouse = true;
-    //   },
-    //   true
-    // );
-    // textarea.addEventListener(
-    //   "focusout",
-    //   () => {
-    //     textareaSelectionManager.setPosWhenTextareaActive();
-    //     focusByMouse = false;
-    //   },
-    //   true
-    // );
-    // textarea.addEventListener("focusin", async () => {
-    //   if (!focusByMouse && textareaSelectionManager.textarea) {
-    //     await sleep(50);
-    //     const pos = textareaSelectionManager.getPos();
-    //     if (
-    //       textarea.selectionStart !== pos.start &&
-    //       textarea.selectionEnd !== pos.end
-    //     ) {
-    //       textareaSelectionManager.applyPosToTextarea();
-    //     }
-    //   }
-    //   if (textareaSelectionManager.textarea) {
-    //     textareaSelectionManager.reset();
-    //   }
-    //   focusByMouse = false;
-    // });
-
     let scrolling = false;
     const scrollTarget = textarea.closest(".scrollable-container");
     if (scrollTarget) {
@@ -1505,43 +1458,6 @@
             return;
           }
 
-          // HACK: IME入力時にEnterが反応しなくなることがある事象への対処
-          // 2025-07-30 直ったように見えるのでコメントアウト
-          // const isSearchPage =
-          //   location.pathname === "/" ||
-          //   location.pathname.startsWith(SEARCH_PATHNAME);
-          // if (isSearchPage) {
-          //   const askInput = document.getElementById(TOP_EDITABLE_DIV_ID);
-          //   if (askInput && !askInput.dataset.askInputEventAdded) {
-          //     askInput.addEventListener("keydown", (event) => {
-          //       if (event.code === "Enter" && !event.shiftKey) {
-          //         if (event.isComposing) {
-          //           return;
-          //         }
-          //         if (askInput.textContent.trim() === "") {
-          //           return;
-          //         }
-          //         setTimeout(() => {
-          //           if (!isSearchPage) {
-          //             return;
-          //           }
-          //           if (askInput.textContent.trim() === "") {
-          //             return;
-          //           }
-          //           const submitButton = document.querySelector(
-          //             'button[data-testid="submit-button"]'
-          //           );
-          //           if (submitButton) {
-          //             submitButton.click();
-          //           }
-          //         }, 500);
-          //       }
-          //     });
-          //     askInput.dataset.askInputEventAdded = true;
-          //   }
-          //   return;
-          // }
-
           // ライブラリページのショートカット
           if (location.pathname === LIBRARY_PATHNAME) {
             setLibraryEventListeners(parent);
@@ -1616,22 +1532,6 @@
                 navigator.clipboard
                   .writeText(cleanedText)
                   .then(() => {
-                    // コピー成功時の処理
-                    // // ボタンの内容を一時的に保存
-                    // const originalDiv = button.children[0];
-                    // // ボタンをチェックマークに変更
-                    // const icon = document.createElement("img");
-                    // icon.src = chrome.runtime.getURL("assets/clip-check.png");
-                    // icon.width = 16;
-                    // icon.height = 16;
-                    // icon.classList.add("ks-check-icon");
-                    // const newDiv = document.createElement("div");
-                    // newDiv.appendChild(icon);
-                    // button.children[0].replaceWith(newDiv);
-                    // // 元に戻す
-                    // setTimeout(() => {
-                    //   newDiv.replaceWith(originalDiv);
-                    // }, 2000);
                     button.classList.add("simple-copy-success");
                     setTimeout(() => {
                       button.classList.remove("simple-copy-success");
