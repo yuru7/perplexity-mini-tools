@@ -6,7 +6,8 @@
   const TOP_EDITABLE_DIV_ID = "ask-input";
 
   const SEARCH_SOURCE_AREA_ITEM_SELECTOR = '[role="menuitemcheckbox"]';
-  const AI_MODEL_BUTTON_SELECTOR = 'button:has(use[*|href="#pplx-icon-chevron-down"])';
+  const AI_MODEL_BUTTON_SELECTOR =
+    'button:has(use[*|href="#pplx-icon-chevron-down"])';
   const CHECK_ICON_SELECTOR = 'svg:has(use[*|href="#pplx-icon-check"])';
 
   const LIBRARY_PATHNAME = "/library";
@@ -380,8 +381,8 @@
       return;
     }
 
-    // Ctrl+U で、同じスペース内で新しいスレッド
-    if (ctrlOrMetaKey(event) && event.code === "KeyU") {
+    // Ctrl+Shift+I で、同じスペース内で新しいスレッド
+    if (ctrlOrMetaKey(event) && event.shiftKey && event.code === "KeyI") {
       event.preventDefault();
       if (!window.location.pathname.startsWith(SEARCH_PATHNAME)) {
         return;
