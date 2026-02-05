@@ -11,15 +11,13 @@ Navigation:
 - `Ctrl(Cmd) + Shift + K`: Navigate to "/spaces"
 - `Up/Down & Enter on "/library" search box`: Navigate through search results
 - `Up/Down/Left/Right & Enter on "/spaces"`: Navigate through spaces
+- `Ctrl(Cmd) + Shift + I`: Show the top of the current space
 
 Change Pro-search options:
 
 - `Ctrl + ArrowDown`: Switch to the next model
 - `Ctrl + ArrowUp`: Switch to the previous model
 - `Ctrl + .`: Select the AI model
-- `Ctrl + Shift + .`: Toggle Web search source
-- `Ctrl + Shift + ArrowDown`: Switch to the next search mode (cycles Web / Deep Research / Labs)
-- `Ctrl + Shift + ArrowUp`: Switch to the previous search mode (cycles backward)
 
 Simple Copy:
 
