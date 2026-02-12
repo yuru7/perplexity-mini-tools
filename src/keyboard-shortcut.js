@@ -124,59 +124,6 @@
     },
   };
 
-  const tooltipManager = {
-    SELECTOR: "pplx-mini-tools-tooltip",
-
-    showTooltip(message, textarea, skipIfExist = false) {
-      const oldTooltip = document.querySelector(`.${this.SELECTOR}`);
-      // スキップモードがオンで既存のツールチップがあればスキップ
-      if (skipIfExist && oldTooltip) {
-        return;
-      }
-      // 既存のツールチップを削除
-      if (oldTooltip) {
-        oldTooltip.remove();
-      }
-
-      // テキストエリア要素の取得
-      const textareaRect = textarea.getBoundingClientRect();
-
-      // ツールチップ要素の作成
-      const tooltip = document.createElement("div");
-      tooltip.className = this.SELECTOR;
-      tooltip.textContent = message;
-      document.body.appendChild(tooltip);
-
-      // ツールチップの位置設定（テキストエリアの上部中央）
-      const tooltipRect = tooltip.getBoundingClientRect();
-      tooltip.style.left =
-        textareaRect.left +
-        textareaRect.width / 2 -
-        tooltipRect.width / 2 +
-        "px";
-      tooltip.style.top =
-        textareaRect.top - tooltipRect.height - 10 + window.scrollY + "px";
-
-      // ツールチップの表示
-      setTimeout(() => {
-        tooltip.style.opacity = "0.8";
-      }, 10);
-    },
-
-    hideTooltip() {
-      const tooltip = document.querySelector(`.${this.SELECTOR}`);
-      if (!tooltip) {
-        return;
-      }
-      setTimeout(() => {
-        tooltip.style.opacity = "0";
-        setTimeout(() => {
-          tooltip.remove();
-        }, 100);
-      }, 100);
-    },
-  };
-
   async function initConfig() {
     // 設定読み込み
     const config = {};
@@ -305,16 +252,6 @@
       (element) =>
         !elements.some((other) => other !== element && element.contains(other)),
     );
-  }
-
-  function toolTipHandler(event) {
-    if (event.isComposing) {
-      return;
-    }
-
-    if (["Control", "Meta"].includes(event.key) && event.type === "keyup") {
-      tooltipManager.hideTooltip();
-    }
   }
 
   function navigationHandler(event) {
@@ -539,9 +476,6 @@
               /検討中/g,
               "Thinking",
             );
-
-            // ツールチップのテキストを更新
-            tooltipManager.showTooltip(selectModelName, mainSearchBox);
 
             // モデル選択ポップアップが消えていない場合はテキストボックスにフォーカスを移す
             if (document.body.contains(modelSelectBoxChildren[0])) {
@@ -1566,16 +1500,6 @@
           searchOptionHandler(event);
           // ナビゲーションショートカット
           navigationHandler(event);
-          // ツールチップ表示
-          toolTipHandler(event);
-        },
-        true,
-      );
-
-      document.addEventListener(
-        "keyup",
-        (event) => {
-          toolTipHandler(event);
         },
         true,
       );
