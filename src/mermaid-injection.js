@@ -122,7 +122,7 @@
     // PNGコピー用ボタン
     const copyBtn = document.createElement("button");
     copyBtn.id = "mermaid-popup-copy";
-    copyBtn.title = "Copy to clipboard";
+    copyBtn.title = "Copy image to clipboard";
 
     const copyImg = document.createElement("img");
     copyImg.src = chrome.runtime.getURL(ICON_COPY);
@@ -349,7 +349,7 @@
     };
 
     imgSVG.src = `data:image/svg+xml;charset=UTF-8;base64,${base64EncodeUnicode(
-      svgString
+      svgString,
     )}`;
 
     while (imgSVG.complete === false) {
@@ -361,7 +361,7 @@
     return btoa(
       encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (match, p1) {
         return String.fromCharCode("0x" + p1);
-      })
+      }),
     );
   }
 
@@ -457,7 +457,7 @@
     const mermaidRegEx = new RegExp(
       "^```mermaid\\s*\\n[\\s\\S]*```$|" +
         `^(${supportedDiagrams.join("|")}) ?`,
-      "m"
+      "m",
     );
     const match = codeText.match(mermaidRegEx);
 
@@ -492,38 +492,168 @@
     if (firstLine.startsWith("flowchart") || firstLine.startsWith("graph")) {
       // 文字列を走査して、[] で囲まれた文字列を " で囲む
       charArray = Array.from(code);
-      let inDoubleQuote = false;
-      let inComment = false;
-      let escapeStartIndex = -1;
-      let escapeEndIndex = -1;
-      charArray.forEach((char, index) => {
-        if (!inComment) {
-          if (char === '"' && !inDoubleQuote) {
-            inDoubleQuote = true;
-          } else if (char === '"' && inDoubleQuote) {
-            inDoubleQuote = false;
-          }
-        }
-        if (!inDoubleQuote && char === "%" && charArray[index - 1] === "%") {
-          inComment = true;
-        }
+
+      let inDoubleQuote, inComment, bracketStart, bracketEnd, startBracket;
+      const resetAllVars = () => {
+        inDoubleQuote = false;
+        inComment = false;
+        inExpandedNodeShapes = false;
+        bracketStart = -1;
+        bracketEnd = -1;
+        startBracket = "";
+      };
+      resetAllVars();
+
+      // TODO 図形ごとのカッコを定義する
+      const bracketSymbolList = [
+        "[",
+        "{",
+        "(",
+        "]",
+        "}",
+        ")",
+        ">",
+        "/",
+        "\\",
+        "|",
+      ];
+      const bracketPairs = {
+        "[": "]",
+        "{": "}",
+        "(": ")",
+        ">": "]",
+      };
+      for (let i = 0; i < charArray.length; i++) {
+        const char = charArray[i];
+
+        // 改行が来たらすべてリセット
         if (char === "\n") {
-          inComment = false;
+          resetAllVars();
+          continue;
         }
-        if (!inDoubleQuote && !inComment) {
-          if (char === "[") {
-            escapeStartIndex = index;
-          } else if (char === "]") {
-            escapeEndIndex = index;
+
+        // コメントアウトの場合はスキップ
+        if (inComment) {
+          continue;
+        }
+
+        // 文字列内判定中で、閉じるダブルクオートが来るまではスキップ
+        if (inDoubleQuote && char !== '"') {
+          continue;
+        }
+
+        // 処理に関係しない文字列はスキップ
+        if (!bracketSymbolList.concat(['"', "@"]).includes(char)) {
+          continue;
+        }
+
+        // Expanded Node Shapes の場合はスキップ
+        if (inExpandedNodeShapes && char !== "}") {
+          continue;
+        }
+
+        // コメントアウトの開始
+        if (char === "%" && charArray[i + 1] === "%") {
+          inComment = true;
+          i++;
+          continue;
+        }
+
+        // Expanded Node Shapes の処理
+        if (char === "@" && charArray[i + 1] === "{") {
+          inExpandedNodeShapes = true;
+          i++; // 次の { はスキップ
+          continue;
+        } else if (inExpandedNodeShapes && char === "}") {
+          inExpandedNodeShapes = false;
+          continue;
+        }
+
+        // カッコの開始
+        if (bracketSymbolList.includes(char) && bracketStart === -1) {
+          if (char === "(") {
+            startBracket = char;
+            bracketStart = i;
+            if (charArray[i + 1] === "[") {
+              startBracket = "[";
+              bracketStart = i + 1;
+              i++; // 次の [ はスキップ
+            } else if (charArray[i + 1] === "(" && charArray[i + 2] === "(") {
+              startBracket = "(";
+              bracketStart = i + 2;
+              i += 2; // 次の (( はスキップ
+            } else if (charArray[i + 1] === "(") {
+              startBracket = "(";
+              bracketStart = i + 1;
+              i++; // 次の ( はスキップ
+            }
+          } else if (char === "[") {
+            startBracket = char;
+            bracketStart = i;
+            if (charArray[i + 1] === "[") {
+              startBracket = "[";
+              bracketStart = i + 1;
+              i++; // 次の [ はスキップ
+            } else if (charArray[i + 1] === "(") {
+              startBracket = "(";
+              bracketStart = i + 1;
+              i++; // 次の / または \ はスキップ
+            } else if (["/", "\\"].includes(charArray[i + 1])) {
+              startBracket = charArray[i + 1];
+              bracketStart = i + 1;
+              i++; // 次の / または \ はスキップ
+            }
+          } else if (char === "{") {
+            startBracket = char;
+            bracketStart = i;
+            if (charArray[i + 1] === "{") {
+              startBracket = "{";
+              bracketStart = i + 1;
+              i++; // 次の { はスキップ
+            }
+          } else if (char === ">" && !["-", "="].includes(charArray[i - 1])) {
+            startBracket = char;
+            bracketStart = i;
+          } else if (char === "|") {
+            startBracket = char;
+            bracketStart = i;
           }
+          continue;
         }
-        if (escapeStartIndex !== -1 && escapeEndIndex !== -1) {
-          charArray[escapeStartIndex] = '["';
-          charArray[escapeEndIndex] = '"]';
-          escapeStartIndex = -1;
-          escapeEndIndex = -1;
+
+        // ダブルクオートの処理
+        if (!inDoubleQuote && startBracket > -1 && char === '"') {
+          // 開始
+          inDoubleQuote = true;
+          continue;
+        } else if (inDoubleQuote && char === '"') {
+          // 終了
+          inDoubleQuote = false;
+          continue;
         }
-      });
+
+        // カッコの終了
+        if (
+          bracketStart > -1 &&
+          (char === bracketPairs[startBracket] ||
+            (["/", "\\"].includes(startBracket) &&
+              ["/", "\\"].includes(char)) ||
+            (startBracket === "|" && char === "|"))
+        ) {
+          bracketEnd = i;
+        }
+
+        // ダブルクォートの追加
+        if (bracketStart > -1 && bracketEnd > -1) {
+          if (charArray[bracketStart + 1] !== '"') {
+            charArray[bracketStart] = `${charArray[bracketStart]}"`;
+          }
+          if (charArray[bracketEnd - 1] !== '"') {
+            charArray[bracketEnd] = `"${charArray[bracketEnd]}`;
+          }
+          resetAllVars();
+        }
+      }
       code = charArray.join("");
     }
     return code;
@@ -548,22 +678,26 @@
 
     // コードブロック記号は削除
     const codeText = node.textContent.trim();
-    const code = codeText.replace(/^```mermaid\s*\n|\n\s*```$/gm, "");
-
-    // シンタックスエラーをできるだけ回避するための前処理
-    const escapedCode = escapeMermaidSyntax(code);
+    let code = codeText.replace(/^```mermaid\s*\n|\n\s*```$/gm, "");
 
     // パースしてエラーがあればアラートを表示
+    let errMessage;
     try {
-      await mermaid.parse(escapedCode);
+      await mermaid.parse(code);
     } catch (error) {
-      const message = error.message;
-      alert(`[Mermaid syntax error]\n\n${message}`);
-      return;
+      errMessage = error.message;
+      // パースエラーがあった場合はエスケープ処理をして再度パースを試みる
+      try {
+        code = escapeMermaidSyntax(code);
+        await mermaid.parse(code);
+      } catch (error) {
+        alert(`[Mermaid syntax error]\n\n${errMessage}`);
+        return;
+      }
     }
 
     // SVGを生成してポップアップに表示
-    const { svg } = await mermaid.render("graphDiv", escapedCode);
+    const { svg } = await mermaid.render("graphDiv", code);
     return svg;
   }
 
