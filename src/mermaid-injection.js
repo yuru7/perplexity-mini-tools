@@ -504,7 +504,6 @@
       };
       resetAllVars();
 
-      // TODO 図形ごとのカッコを定義する
       const bracketSymbolList = [
         "[",
         "{",
