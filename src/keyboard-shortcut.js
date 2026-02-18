@@ -986,6 +986,8 @@
 
   // ライブラリページのショートカット
   function setLibraryEventListeners(parent) {
+    const scrollContainerClassWithoutDot = "scrollbar-subtle";
+
     function activeLinkHandler(event, scrollCenter = false) {
       if (event.isComposing) {
         return;
@@ -1023,6 +1025,8 @@
 
         nextLink.classList.add("search-result-active");
 
+        const sclollContainerClass = "." + scrollContainerClassWithoutDot;
+
         // スクロール
         if (scrollCenter) {
           nextLink.scrollIntoView({
@@ -1039,7 +1043,7 @@
             // 固定要素との重複を避けるため、スクロール位置を調整
             const fixedElementHeight = 120; // 固定要素の高さ（実際の値に合わせて調整）
             const scrollContainer =
-              nextLink.closest(".scrollable-container") ||
+              nextLink.closest(sclollContainerClass) ||
               document.documentElement;
             const elementTop = nextLink.getBoundingClientRect().top;
             const scrollTop =
@@ -1052,9 +1056,10 @@
             }
           }
         }
-        const scrollContainer = libraryLinks.links[
-          libraryLinks.activeIndex
-        ].closest(".scrollable-container");
+        const scrollContainer =
+          libraryLinks.links[libraryLinks.activeIndex].closest(
+            sclollContainerClass,
+          );
         if (scrollContainer) {
           if (libraryLinks.activeIndex === libraryLinks.links.length - 1) {
             scrollContainer.scrollTop = scrollContainer.scrollHeight;
@@ -1114,7 +1119,7 @@
       const isOuter = (current) => {
         return (
           current.querySelector(`a[href^="${SEARCH_PATHNAME}/"]`) &&
-          current.classList.contains("scrollable-container")
+          current.classList.contains(scrollContainerClassWithoutDot)
         );
       };
 
