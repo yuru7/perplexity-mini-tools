@@ -57,14 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("toc-enabled").checked = data.tocEnabled;
       }
 
-      // 選択中モデル表示の設定
-      if (data.showSelectedModel === undefined) {
-        document.getElementById("show-selected-model").checked = true;
-      } else {
-        document.getElementById("show-selected-model").checked =
-          data.showSelectedModel;
-      }
-
       // タブタイトルの実行中アイコン表示設定
       if (data.runningTitlebarEnabled === undefined) {
         document.getElementById("running-titlebar-enabled").checked = true;
@@ -108,12 +100,6 @@ document.querySelector("form").addEventListener("submit", (e) => {
   // TOC機能の設定
   const tocEnabled = document.getElementById("toc-enabled").checked;
   chrome.storage.local.set({ tocEnabled });
-
-  // 選択中モデル表示の設定
-  const showSelectedModel = document.getElementById(
-    "show-selected-model",
-  ).checked;
-  chrome.storage.local.set({ showSelectedModel });
 
   // タブタイトルの実行中アイコン表示設定
   const runningTitlebarEnabled = document.getElementById(
