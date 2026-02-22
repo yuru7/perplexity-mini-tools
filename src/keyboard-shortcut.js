@@ -23,6 +23,51 @@
     "pmt-model-select-cursor-key-highlight";
 
   const SEARCH_MODE_BUTTONS_LENGTH = 3;
+  const RUNTIME_STATE_KEY = "__pmtKeyboardShortcutRuntime";
+
+  function getRuntimeState() {
+    if (!window[RUNTIME_STATE_KEY]) {
+      window[RUNTIME_STATE_KEY] = {
+        initialized: false,
+        mainObserver: null,
+        aiModelCursorObserverAdded: false,
+      };
+    }
+    return window[RUNTIME_STATE_KEY];
+  }
+
+  function observeBodyUntil(onAddedNodeHandled) {
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (onAddedNodeHandled(node, mutation)) {
+            observer.disconnect();
+            return;
+          }
+        }
+      }
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+    return observer;
+  }
+
+  function observeBodyOnce(onMutations) {
+    const observer = new MutationObserver((mutations) => {
+      try {
+        onMutations(mutations);
+      } finally {
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+    return observer;
+  }
 
   const libraryLinks = {
     activeIndex: -1,
@@ -275,13 +320,8 @@
       if (link) {
         link.click();
         // location が変更されたら非表示
-        const observer = new MutationObserver(() => {
+        observeBodyOnce(() => {
           hideLoadingIndicator();
-          observer.disconnect();
-        });
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true,
         });
       } else {
         // HACK: ページ構造が変わってしまい、リンクが常に存在するわけではなくなったため直接移動も考慮
@@ -303,13 +343,8 @@
       if (link) {
         link.click();
         // location が変更されたら非表示
-        const observer = new MutationObserver(() => {
+        observeBodyOnce(() => {
           hideLoadingIndicator();
-          observer.disconnect();
-        });
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true,
         });
       } else {
         // HACK: ページ構造が変わってしまい、リンクが常に存在するわけではなくなったため直接移動も考慮
@@ -336,13 +371,8 @@
         showLoadingIndicator();
         spaceLink.click();
         // location が変更されたら非表示
-        const observer = new MutationObserver(() => {
+        observeBodyOnce(() => {
           hideLoadingIndicator();
-          observer.disconnect();
-        });
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true,
         });
       }
       return;
@@ -453,55 +483,47 @@
     if (!button) {
       return;
     }
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          try {
-            // 通常の要素以外はスキップ
-            if (node.tagName !== "DIV") {
-              return;
-            }
+    observeBodyUntil((node) => {
+      try {
+        // 通常の要素以外はスキップ
+        if (node.tagName !== "DIV") {
+          return false;
+        }
 
-            // ポップアップがちらつくのでいったん非表示にするCSSを適用
-            node.style.display = "none";
+        // ポップアップがちらつくのでいったん非表示にするCSSを適用
+        node.style.display = "none";
 
-            const modelSelectBoxChildren = node.querySelectorAll(
-              MODEL_SELECT_AREA_ITEM_SELECTOR,
-            );
-            if (modelSelectBoxChildren.length === 0) {
-              return;
-            }
-            // 部分的に日本語が混じるので変換する
-            const selectModelName = clickModel(node, upOrDown).replace(
-              /検討中/g,
-              "Thinking",
-            );
+        const modelSelectBoxChildren = node.querySelectorAll(
+          MODEL_SELECT_AREA_ITEM_SELECTOR,
+        );
+        if (modelSelectBoxChildren.length === 0) {
+          return false;
+        }
+        // 部分的に日本語が混じるので変換する
+        const selectModelName = clickModel(node, upOrDown).replace(
+          /検討中/g,
+          "Thinking",
+        );
 
-            // モデル選択ポップアップが消えていない場合はテキストボックスにフォーカスを移す
-            if (document.body.contains(modelSelectBoxChildren[0])) {
-              document.getElementById(TOP_EDITABLE_DIV_ID).focus();
-            }
-          } finally {
-            // ポップアップ非表示CSSを削除
-            if (node.tagName === "DIV") {
-              node.style.display = "";
-            }
-          }
-        });
-      });
-      observer.disconnect();
-    });
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
+        // モデル選択ポップアップが消えていない場合はテキストボックスにフォーカスを移す
+        if (document.body.contains(modelSelectBoxChildren[0])) {
+          document.getElementById(TOP_EDITABLE_DIV_ID).focus();
+        }
+        return true;
+      } finally {
+        // ポップアップ非表示CSSを削除
+        if (node.tagName === "DIV") {
+          node.style.display = "";
+        }
+      }
     });
     // モデル選択ボタンをクリック
     button.click();
   }
 
-  let alreadyNavigateAiModelWithCursorKeysObserver = false;
   let enteredIndex = -1;
   function navigateAiModelWithCursorKeys(event) {
+    const runtimeState = getRuntimeState();
     // 想定する処理の流れ
     // - モデル選択ボタンをクリックしてポップアップ表示
     // - ポップアップの、現在アクティブ部分をハイライト
@@ -596,7 +618,7 @@
       return;
     }
 
-    if (!alreadyNavigateAiModelWithCursorKeysObserver) {
+    if (!runtimeState.aiModelCursorObserverAdded) {
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           mutation.addedNodes.forEach((node) => {
@@ -633,7 +655,7 @@
         childList: true,
         subtree: true,
       });
-      alreadyNavigateAiModelWithCursorKeysObserver = true;
+      runtimeState.aiModelCursorObserverAdded = true;
     }
 
     button.click();
@@ -768,69 +790,67 @@
       return;
     }
 
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach(async (node) => {
-          try {
-            if (node.tagName !== "DIV") {
-              return;
-            }
-            // ポップアップがちらつくのでいったん非表示にするCSSを適用
-            node.style.display = "none";
+    observeBodyUntil((node) => {
+      (async () => {
+        try {
+          if (node.tagName !== "DIV") {
+            return;
+          }
+          // ポップアップがちらつくのでいったん非表示にするCSSを適用
+          node.style.display = "none";
 
-            const searchSourceBoxChildren = node.querySelectorAll(
-              SEARCH_SOURCE_AREA_ITEM_SELECTOR,
-            );
-            if (searchSourceBoxChildren.length === 0) {
-              return;
-            }
-            const webButton = node.querySelectorAll("button")[0];
-            if (!webButton) {
-              return;
-            }
-            const allButtons = node.querySelectorAll("button");
+          const searchSourceBoxChildren = node.querySelectorAll(
+            SEARCH_SOURCE_AREA_ITEM_SELECTOR,
+          );
+          if (searchSourceBoxChildren.length === 0) {
+            return;
+          }
+          const webButton = node.querySelectorAll("button")[0];
+          if (!webButton) {
+            return;
+          }
+          const allButtons = node.querySelectorAll("button");
 
-            if (webButton.dataset.state === "checked") {
-              // すべてOFFにする
-              webButton.click();
-              for (let i = 1; i < allButtons.length; i++) {
-                if (allButtons[i].dataset.state !== "checked") {
-                  continue;
-                }
-                // HACK: ボタンクリックのタイミングでDOMが更新されてしまうので取得しなおす
-                await sleep(100);
-                const buttons = node.querySelectorAll("button");
-                buttons[i].click();
+          if (webButton.dataset.state === "checked") {
+            // すべてOFFにする
+            webButton.click();
+            for (let i = 1; i < allButtons.length; i++) {
+              if (allButtons[i].dataset.state !== "checked") {
+                continue;
               }
-            } else {
-              // webButtonのみONにする
-              webButton.click();
-              for (let i = 1; i < allButtons.length; i++) {
-                if (allButtons[i].dataset.state !== "checked") {
-                  continue;
-                }
-                // HACK: ボタンクリックのタイミングでDOMが更新されてしまうので取得しなおす
-                await sleep(50);
-                const buttons = node.querySelectorAll("button");
-                buttons[i].click();
-              }
+              // HACK: ボタンクリックのタイミングでDOMが更新されてしまうので取得しなおす
+              await sleep(100);
+              const buttons = node.querySelectorAll("button");
+              buttons[i].click();
             }
-
-            // ポップアップを閉じる
-            document.getElementById(TOP_EDITABLE_DIV_ID).focus();
-          } finally {
-            // ポップアップ非表示CSSを削除
-            if (node && node.style) {
-              node.style.display = "";
+          } else {
+            // webButtonのみONにする
+            webButton.click();
+            for (let i = 1; i < allButtons.length; i++) {
+              if (allButtons[i].dataset.state !== "checked") {
+                continue;
+              }
+              // HACK: ボタンクリックのタイミングでDOMが更新されてしまうので取得しなおす
+              await sleep(50);
+              const buttons = node.querySelectorAll("button");
+              buttons[i].click();
             }
           }
-        });
-      });
-      observer.disconnect();
-    });
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
+
+          // ポップアップを閉じる
+          document.getElementById(TOP_EDITABLE_DIV_ID).focus();
+        } finally {
+          // ポップアップ非表示CSSを削除
+          if (node && node.style) {
+            node.style.display = "";
+          }
+        }
+      })();
+
+      return (
+        node.tagName === "DIV" &&
+        node.querySelectorAll(SEARCH_SOURCE_AREA_ITEM_SELECTOR).length > 0
+      );
     });
 
     // 検索ソースボタンをクリック
@@ -1137,10 +1157,18 @@
       }
 
       const setObserver = () => {
+        if (!outer || outer.dataset.pmtLibraryObserverAdded) {
+          return;
+        }
+        outer.dataset.pmtLibraryObserverAdded = "true";
+
         // outerに変更があった場合、targetLinksを初期化する
         const observer = new MutationObserver(async (mutations) => {
           if (location.pathname !== LIBRARY_PATHNAME) {
             observer.disconnect();
+            if (outer && outer.dataset) {
+              delete outer.dataset.pmtLibraryObserverAdded;
+            }
             return;
           }
 
@@ -1487,6 +1515,12 @@
   }
 
   async function main() {
+    const runtimeState = getRuntimeState();
+    if (runtimeState.initialized) {
+      return;
+    }
+    runtimeState.initialized = true;
+
     config = await initConfig();
 
     // ページ全体へのイベントリスナーを追加
@@ -1522,8 +1556,11 @@
     }
 
     // DOM変更時の対応をする
-    const observer = new MutationObserver(mainObserver);
-    observer.observe(document.body, {
+    if (runtimeState.mainObserver) {
+      runtimeState.mainObserver.disconnect();
+    }
+    runtimeState.mainObserver = new MutationObserver(mainObserver);
+    runtimeState.mainObserver.observe(document.body, {
       childList: true,
       subtree: true,
       attributes: false,
