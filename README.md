@@ -34,14 +34,16 @@ Automatically detects Mermaid diagrams within tags and adds a preview display bu
 
 ## Library
 
+Specify the version to download.
+
 ```sh
-# Mermaid.js ver: 11.6.0
+# Mermaid.js
 curl https://cdn.jsdelivr.net/npm/mermaid@11.12.3/dist/mermaid.min.js -o lib/mermaid.min.js
-# svg-pan-zoom ver: 3.6.2
+# svg-pan-zoom
 curl https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.2/dist/svg-pan-zoom.min.js -o lib/svg-pan-zoom.min.js
-# turndown.js ver: 7.2.0
+# turndown.js
 curl https://unpkg.com/turndown@7.2.0/dist/turndown.js -o lib/turndown.js
-# turndown-plugin-gfm.js ver: 1.0.2
+# turndown-plugin-gfm.js
 curl https://unpkg.com/turndown-plugin-gfm@1.0.2/dist/turndown-plugin-gfm.js -o lib/turndown-plugin-gfm.js
 ```
 
