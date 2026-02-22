@@ -31,11 +31,13 @@
       "js": [
         "lib/mermaid.min.js",
         "lib/svg-pan-zoom.min.js",
-        "src/mermaid-injection.js",
         "lib/turndown-plugin-gfm.js",
         "lib/turndown.js",
+        "src/mermaid-injection.js",
         "src/keyboard-shortcut.js",
-        "src/toc.js"
+        "src/toc.js",
+        "src/running-titlebar.js"
+
       ],
       "css": [
         "src/style.css"

@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "mermaidTheme",
       "tocEnabled",
       "showSelectedModel",
+      "runningTitlebarEnabled",
     ],
     (data) => {
       // 検索オプション切り替えの設定
@@ -63,6 +64,14 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("show-selected-model").checked =
           data.showSelectedModel;
       }
+
+      // タブタイトルの実行中アイコン表示設定
+      if (data.runningTitlebarEnabled === undefined) {
+        document.getElementById("running-titlebar-enabled").checked = true;
+      } else {
+        document.getElementById("running-titlebar-enabled").checked =
+          data.runningTitlebarEnabled;
+      }
     },
   );
 });
@@ -105,6 +114,12 @@ document.querySelector("form").addEventListener("submit", (e) => {
     "show-selected-model",
   ).checked;
   chrome.storage.local.set({ showSelectedModel });
+
+  // タブタイトルの実行中アイコン表示設定
+  const runningTitlebarEnabled = document.getElementById(
+    "running-titlebar-enabled",
+  ).checked;
+  chrome.storage.local.set({ runningTitlebarEnabled });
 
   // 過去に利用していた設定の削除
   chrome.storage.local.remove("fixInputLag"); // テキストボックス入力時のラグを修正する（実験的機能）
