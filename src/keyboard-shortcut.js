@@ -680,9 +680,12 @@
     // MAXモードでしか選択できないモデルをスキップする
     let maxLoopCount = 20;
     while (maxLoopCount > 0) {
-      if (
-        modelSelectBoxChildren[checkedIndex + add].querySelector(".border-max")
-      ) {
+      const target = modelSelectBoxChildren[checkedIndex + add];
+      if (!target) break;
+
+      // textContent に "max" が含まれているか判定（大文字・小文字無視）
+      const hasMax = /max/i.test(target.textContent || "");
+      if (hasMax) {
         if (
           upOrDown === UP &&
           checkedIndex === modelSelectBoxChildren.length - 1 &&
