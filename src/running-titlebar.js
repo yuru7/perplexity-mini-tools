@@ -65,7 +65,8 @@ function createRunningTitlebar() {
       const wasRunning = isRunning;
       isRunning = hasStoppingIcon;
       if (wasRunning && !isRunning) {
-        hasUnreadCompletion = document.visibilityState !== "visible";
+        hasUnreadCompletion =
+          document.visibilityState !== "visible" || !document.hasFocus();
       }
       if (!wasRunning && isRunning) {
         hasUnreadCompletion = false;
@@ -101,8 +102,17 @@ function createRunningTitlebar() {
     characterData: true,
   });
 
+  // タブが非アクティブな状態で完了した場合に未読完了状態をクリア
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && hasUnreadCompletion) {
+      hasUnreadCompletion = false;
+      applyTitle();
+    }
+  });
+
+  // ブラウザウィンドウがアクティブになったときにも未読完了状態をクリア
+  window.addEventListener("focus", () => {
+    if (hasUnreadCompletion && document.visibilityState === "visible") {
       hasUnreadCompletion = false;
       applyTitle();
     }
