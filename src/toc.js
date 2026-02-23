@@ -44,7 +44,7 @@
     const tocBody = document.createElement("div");
     tocBody.classList.add(
       "toc-body",
-      "scrollbar-subtle" // HACK: Perplexityのスクロールバーのスタイルを適用
+      "scrollbar-subtle", // HACK: Perplexityのスクロールバーのスタイルを適用
     );
 
     // ホバーイベント
@@ -78,7 +78,7 @@
       setActiveItem(index);
 
       element.scrollIntoView({
-        behavior: "smooth",
+        behavior: "instant",
         block: "start",
       });
 
@@ -88,7 +88,7 @@
         if (!scrollTimeout) {
           updateActiveItem();
         }
-      }, 1000);
+      }, 300);
     };
 
     item.addEventListener("click", scrollToElement);
@@ -229,6 +229,7 @@
     if (!isEnabled) {
       return;
     }
+
     if (!location.pathname.startsWith("/search")) {
       if (tocContainer) {
         tocContainer.remove();
@@ -239,9 +240,12 @@
 
     let shouldUpdate = false;
 
-    mutations.forEach((mutation) => {
-      // 新しいノードが追加されたか、削除されたかをチェック
-      if (mutation.type === "childList") {
+    queueMicrotask(() => {
+      mutations.forEach((mutation) => {
+        // 新しいノードが追加されたか、削除されたかをチェック
+        if (mutation.type !== "childList") {
+          return;
+        }
         const addedNodes = Array.from(mutation.addedNodes);
         const removedNodes = Array.from(mutation.removedNodes);
 
@@ -255,47 +259,43 @@
               );
             }
             return false;
-          }
+          },
         );
 
         if (hasRelevantChanges) {
           shouldUpdate = true;
         }
+      });
 
-        // スクロールイベントでアクティブアイテムを更新
-        if (isScrolling) {
-          return;
-        }
-        const scrollableContainer = document.querySelector(
-          ".scrollable-container"
-        );
-        if (
-          scrollableContainer &&
-          scrollableContainer.dataset.tocEnabled !== "true"
-        ) {
-          scrollableContainer.dataset.tocEnabled = "true";
-          scrollableContainer.addEventListener(
-            "scroll",
-            () => {
-              //   clearTimeout(scrollTimeout);
-              if (scrollTimeout) {
-                return;
-              }
-              scrollTimeout = setTimeout(() => {
-                updateActiveItem();
-                scrollTimeout = null;
-              }, 300);
-            },
-            { passive: true }
-          );
-        }
+      if (shouldUpdate) {
+        // 少し遅延させて更新（DOM更新の完了を待つため）
+        clearTimeout(updateTimeout);
+        updateTimeout = setTimeout(updateToc, 500);
       }
     });
 
-    if (shouldUpdate) {
-      // 少し遅延させて更新（DOM更新の完了を待つため）
-      clearTimeout(updateTimeout);
-      updateTimeout = setTimeout(updateToc, 500);
+    // スクロールイベントでアクティブアイテムを更新
+    const scrollableContainer = document.querySelector(".scrollable-container");
+    if (
+      scrollableContainer &&
+      scrollableContainer.dataset.tocEnabled !== "true"
+    ) {
+      scrollableContainer.dataset.tocEnabled = "true";
+      scrollableContainer.addEventListener(
+        "scroll",
+        () => {
+          queueMicrotask(() => {
+            if (scrollTimeout || isScrolling || shouldUpdate) {
+              return;
+            }
+            scrollTimeout = setTimeout(() => {
+              updateActiveItem();
+              scrollTimeout = null;
+            }, 300);
+          });
+        },
+        { passive: true },
+      );
     }
   });
 
