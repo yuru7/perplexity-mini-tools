@@ -9,6 +9,7 @@
   const AI_MODEL_BUTTON_SELECTOR =
     'button:has(use[*|href="#pplx-icon-chevron-down"])';
   const CHECK_ICON_SELECTOR = 'svg:has(use[*|href="#pplx-icon-check"])';
+  const LOCK_ICON_SELECTOR = 'svg:has(use[*|href="#pplx-icon-lock"])';
 
   const LIBRARY_PATHNAME = "/library";
   const SPACES_PATHNAME = "/spaces";
@@ -706,7 +707,9 @@
       if (!target) break;
 
       // textContent に "max" が含まれているか判定（大文字・小文字無視）
-      const hasMax = /max/i.test(target.textContent || "");
+      const hasMax =
+        /max|マックス/i.test(target.textContent || "") ||
+        target.querySelector(LOCK_ICON_SELECTOR);
       if (hasMax) {
         if (
           upOrDown === UP &&
